@@ -12,6 +12,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        persist-credentials: true
       
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -28,8 +30,8 @@ jobs:
         python scripts/fetch_news.py
         
     - name: Commit and push changes
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add data/news.json
-        git diff-index --quiet HEAD || (git commit -m "Update hot news $(date '+%Y-%m-%d')" && git push)
+      uses: EndBug/add-and-commit@v9
+      with:
+        message: "Update hot news $(date '+%Y-%m-%d')"
+        add: "data/news.json"
+        push: true
