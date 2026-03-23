@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>热点资讯</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-bottom: 30px;
+            border-radius: 10px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .update-time {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .sort-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .view-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: #e0e0e0;
+            color: #333;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #d0d0d0;
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .news-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .news-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .news-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .news-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+
+        .news-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .meta-label {
+            font-weight: 500;
+            color: #444;
+        }
+
+        .meta-value {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .news-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-icon {
+            font-size: 1.1em;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .news-detail {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .news-detail.active {
+            display: block;
+        }
+
+        .news-content {
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .news-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .news-link:hover {
+            text-decoration: underline;
+        }
+
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .rank-1 { background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%); }
+        .rank-2 { background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%); }
+        .rank-3 { background: linear-gradient(135deg, #cd7f32 0%, #b87333 100%); }
+
+        .news-header {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .news-title-wrapper {
+            flex: 1;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .sort-buttons, .view-buttons {
+                justify-content: center;
+            }
+            
+            .news-meta, .news-stats {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔥 热点资讯</h1>
+            <p class="update-time" id="updateTime">加载中...</p>
+        </header>
+
+        <div class="controls">
+            <div class="sort-buttons">
+                <button class="active" data-sort="hotness">热度</button>
+                <button data-sort="views">浏览量</button>
+                <button data-sort="comments">评论数</button>
+                <button data-sort="forwards">转发量</button>
+                <button data-sort="favorites">收藏数</button>
+                <button data-sort="recommendations">推荐次数</button>
+            </div>
+            <div class="view-buttons">
+                <button class="active" data-view="top">前20条</button>
+                <button data-view="bottom">后20条</button>
+            </div>
+        </div>
+
+        <div class="news-list" id="newsList">
+        </div>
+
+        <footer>
+            <p>数据每日自动更新 · 24小时热门资讯</p>
+        </footer>
+    </div>
+
+    <script>
+        let newsData = [];
+        let currentSort = 'hotness';
+        let currentView = 'top';
+
+        async function loadNewsData() {
+            try {
+                const response = await fetch('data/news.json');
+                if (!response.ok) throw new Error('Failed to load data');
+                const data = await response.json();
+                newsData = data.news;
+                document.getElementById('updateTime').textContent = 
+                    `更新时间: ${new Date(data.update_time).toLocaleString('zh-CN')}`;
+                renderNews();
+            } catch (error) {
+                console.error('Error loading news data:', error);
+                document.getElementById('updateTime').textContent = '暂无数据，请先运行爬虫脚本';
+            }
+        }
+
+        function renderNews() {
+            const sorted = [...newsData].sort((a, b) => b[currentSort] - a[currentSort]);
+            let displayNews;
+            
+            if (currentView === 'top') {
+                displayNews = sorted.slice(0, 20);
+            } else {
+                displayNews = sorted.slice(-20).reverse();
+            }
+
+            const container = document.getElementById('newsList');
+            container.innerHTML = '';
+
+            displayNews.forEach((news, index) => {
+                const rank = currentView === 'top' ? index + 1 : sorted.length - 20 + index + 1;
+                const item = document.createElement('div');
+                item.className = 'news-item';
+                item.innerHTML = `
+                    <div class="news-header">
+                        <div class="rank-badge ${rank <= 3 ? 'rank-' + rank : ''}">${rank}</div>
+                        <div class="news-title-wrapper">
+                            <div class="news-title">${escapeHtml(news.title)}</div>
+                            <div class="news-meta">
+                                <div class="meta-item">
+                                    <span class="meta-label">出处:</span>
+                                    <span class="meta-value">${escapeHtml(news.source)}</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">发布时间:</span>
+                                    <span>${formatDate(news.publish_time)}</span>
+                                </div>
+                            </div>
+                            <div class="news-stats">
+                                <div class="stat-item">
+                                    <span class="stat-icon">🔥</span>
+                                    <span class="stat-label">热度:</span>
+                                    <span class="stat-value">${news.hotness}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-icon">👁️</span>
+                                    <span class="stat-label">浏览:</span>
+                                    <span class="stat-value">${formatNumber(news.views)}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-icon">💬</span>
+                                    <span class="stat-label">评论:</span>
+                                    <span class="stat-value">${formatNumber(news.comments)}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-icon">🔄</span>
+                                    <span class="stat-label">转发:</span>
+                                    <span class="stat-value">${formatNumber(news.forwards)}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-icon">⭐</span>
+                                    <span class="stat-label">收藏:</span>
+                                    <span class="stat-value">${formatNumber(news.favorites)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-detail" id="detail-${news.id}">
+                        <div class="news-content">${escapeHtml(news.content) || '暂无详细内容'}</div>
+                    </div>
+                `;
+                
+                item.addEventListener('click', () => {
+                    const detail = document.getElementById(`detail-${news.id}`);
+                    detail.classList.toggle('active');
+                });
+                
+                container.appendChild(item);
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatNumber(num) {
+            if (num >= 10000) {
+                return (num / 10000).toFixed(1) + '万';
+            }
+            return num.toLocaleString();
+        }
+
+        document.querySelectorAll('.sort-buttons button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.sort-buttons button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentSort = btn.dataset.sort;
+                renderNews();
+            });
+        });
+
+        document.querySelectorAll('.view-buttons button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.view-buttons button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentView = btn.dataset.view;
+                renderNews();
+            });
+        });
+
+        loadNewsData();
+    </script>
+</body>
+</html>
