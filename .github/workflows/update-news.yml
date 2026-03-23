@@ -2,7 +2,7 @@ name: Update Hot News
 
 on:
   schedule:
-    - cron: '0 23 * * *'
+    - cron: '0 23 * * *'  # 北京时间7点
   workflow_dispatch:
 
 jobs:

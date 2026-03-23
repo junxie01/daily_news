@@ -331,7 +331,17 @@ class NewsFetcher:
 
     def fetch_zhihu(self):
         try:
-            url = 'https://www.zhihu.com/api/v4/columns/hot/rank-items?limit=20'
+            # 知乎热榜API
+            url = 'https://api.zhihu.com/topstory/hot-list'
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15',
+                'Host': 'api.zhihu.com'
+            }
+            params = {
+                'limit': '50',
+                'reverse_order': '0'
+            }
+            
             response = self.get_with_retry(url, timeout=self.timeout)
             if not response:
                 print(f'Failed to fetch 知乎 after {self.max_retries} attempts')
@@ -346,7 +356,29 @@ class NewsFetcher:
                     if not title:
                         continue
                     
-                    publish_time = datetime.fromtimestamp(target.get('created_at', 0))
+                    # 计算热度值
+                    detail_text = item.get('detail_text', '')
+                    hot = 0
+                    if detail_text:
+                        try:
+                            hot = int(detail_text.split(' ')[0]) * 10000  # 转换为具体数值
+                        except:
+                            pass
+                    
+                    # 构建问题链接
+                    question_url = target.get('url', '')
+                    if question_url:
+                        question_url = question_url.replace('api', 'www').replace('questions', 'question')
+                    else:
+                        question_url = 'https://www.zhihu.com'
+                    
+                    publish_time = datetime.now()
+                    if target.get('created'):
+                        try:
+                            publish_time = datetime.fromtimestamp(target.get('created'))
+                        except:
+                            pass
+                    
                     if datetime.now() - publish_time > timedelta(hours=24):
                         continue
                     
@@ -354,13 +386,13 @@ class NewsFetcher:
                         'id': self.get_hash(title),
                         'title': title,
                         'source': '知乎',
-                        'url': target.get('url', 'https://www.zhihu.com'),
+                        'url': question_url,
                         'publish_time': publish_time.isoformat(),
-                        'views': target.get('visits_count', 0),
-                        'comments': target.get('comment_count', 0),
+                        'views': hot,
+                        'comments': target.get('answer_count', 0),
                         'forwards': 0,
                         'favorites': target.get('follower_count', 0),
-                        'recommendations': target.get('like_count', 0),
+                        'recommendations': hot,
                         'content': target.get('excerpt', '')
                     }
                     self.news_list.append(news)
