@@ -333,14 +333,17 @@ class NewsFetcher:
         try:
             # 知乎热榜API
             url = 'https://api.zhihu.com/topstory/hot-list'
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15',
-                'Host': 'api.zhihu.com'
-            }
             params = {
                 'limit': '50',
                 'reverse_order': '0'
             }
+            
+            # 使用带有正确User-Agent的会话
+            session = requests.Session()
+            session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15',
+                'Host': 'api.zhihu.com'
+            })
             
             response = self.get_with_retry(url, timeout=self.timeout)
             if not response:
@@ -366,11 +369,23 @@ class NewsFetcher:
                             pass
                     
                     # 构建问题链接
-                    question_url = target.get('url', '')
-                    if question_url:
-                        question_url = question_url.replace('api', 'www').replace('questions', 'question')
+                    question_url = 'https://www.zhihu.com'
+                    # 尝试从target中获取问题ID
+                    if target.get('id'):
+                        question_id = target.get('id')
+                        question_url = f'https://www.zhihu.com/question/{question_id}'
                     else:
-                        question_url = 'https://www.zhihu.com'
+                        # 尝试从url字段提取问题ID
+                        url_field = target.get('url', '')
+                        if url_field:
+                            # 从API链接中提取问题ID
+                            if 'questions' in url_field:
+                                # 提取数字ID
+                                import re
+                                match = re.search(r'questions/(\d+)', url_field)
+                                if match:
+                                    question_id = match.group(1)
+                                    question_url = f'https://www.zhihu.com/question/{question_id}'
                     
                     publish_time = datetime.now()
                     if target.get('created'):
