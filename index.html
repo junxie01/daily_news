@@ -356,6 +356,7 @@
                     </div>
                     <div class="news-detail" id="detail-${news.id}">
                         <div class="news-content">${escapeHtml(news.content) || '暂无详细内容'}</div>
+                        ${news.url ? `<a href="${escapeHtml(news.url)}" class="news-link" target="_blank">查看原文链接</a>` : ''}
                     </div>
                 `;
                 

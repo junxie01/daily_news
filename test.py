@@ -1,62 +1,48 @@
-import requests
+import praw
 import pandas as pd
-import time
-import os
+from datetime import datetime
 
-def save_hot_list():
-    # 请求头
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15',
-        'Host': 'api.zhihu.com'
-    }
-    
-    # 请求参数
-    params = (
-        ('limit', '50'),
-        ('reverse_order', '0'),
+def fetch_reddit_home_api():
+    # 替换为你的凭证
+    reddit = praw.Reddit(
+        client_id="你的client_id",
+        client_secret="你的client_secret",
+        user_agent="你的user_agent",
+        username="你的Reddit用户名（可选）",
+        password="你的Reddit密码（可选）"
     )
     
-    # 发送请求
-    response = requests.get(
-        'https://zhihu.com/topstory/hot-list', 
-        headers=headers, 
-        params=params
-    )
+    # 抓取主页热门板块（r/all）的前50条资讯
+    hot_posts = reddit.subreddit("all").hot(limit=50)
     
-    items = response.json()['data']
-    rows = []
-    
-    # 遍历热榜数据
-    for rank, item in enumerate(items, start=1):
-        target = item.get('target')
-        title = target.get('title')
-        answer_count = target.get('answer_count')
-        hot = int(item.get('detail_text').split(' ')[0])
-        follower_count = target.get('follower_count')
-        question_url = target.get('url').replace('api', 'www').replace('questions', 'question')
-        
-        rows.append({
-            '排名': rank,
-            '标题': title,
-            '回答数': answer_count,
-            '关注数': follower_count,
-            '热度(万)': hot,
-            '问题链接': question_url
+    # 解析数据
+    reddit_data = []
+    for idx, post in enumerate(hot_posts, 1):
+        reddit_data.append({
+            "排名": idx,
+            "标题": post.title,
+            "子版块": post.subreddit_name_prefixed,  # 所属板块（如r/worldnews）
+            "点赞数": post.score,
+            "评论数": post.num_comments,
+            "发布时间": datetime.fromtimestamp(post.created_utc).strftime("%Y-%m-%d %H:%M:%S"),
+            "链接": f"https://www.reddit.com{post.permalink}",
+            "内容摘要": post.selftext[:200] + "..." if len(post.selftext) > 200 else post.selftext,
+            "是否置顶": post.stickied
         })
     
-    # 创建DataFrame并保存
-    df = pd.DataFrame(rows)
-    now = time.strftime('%Y-%m-%d %H-%M-%S')
-    dir_path = now.split(' ')[0]
-    
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-    
-    csv_path = f'{dir_path}/{now}.csv'
-    df.to_csv(csv_path, encoding='utf-8-sig', index=None)
-    print(f'{now} 的热榜数据已保存到文件: {csv_path}')
-    
-    return df
+    return reddit_data
 
-# 执行
-save_hot_list()
+# 执行抓取并保存
+if __name__ == "__main__":
+    try:
+        data = fetch_reddit_home_api()
+        if data:
+            df = pd.DataFrame(data)
+            # 保存为CSV（UTF-8编码，避免乱码）
+            df.to_csv("reddit_home_news.csv", index=False, encoding="utf-8-sig")
+            print("抓取完成！数据已保存到 reddit_home_news.csv")
+            # 打印前5条预览
+            print("\n前5条资讯预览：")
+            print(df.head())
+    except Exception as e:
+        print(f"抓取失败：{str(e)}")
