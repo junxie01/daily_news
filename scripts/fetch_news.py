@@ -202,6 +202,1433 @@ class NewsFetcher:
             response.encoding = 'utf-8'
             soup = BeautifulSoup(response.text, 'lxml')
             
+            # 针对特定网站的时间提取策略
+            def extract_time_for_site(soup, site_name):
+                # 通用meta标签提取
+                meta_time = soup.select_one('meta[name="publishdate"], meta[name="datePublished"], meta[property="article:published_time"], meta[name="date"], meta[name="pubdate"], meta[name="publish_date"], meta[name="article_date"], meta[name="dateCreated"], meta[property="og:pubdate"], meta[property="article:published"], meta[property="article:modified_time"]')
+                if meta_time and meta_time.get('content'):
+                    try:
+                        # 尝试解析ISO格式时间
+                        content = meta_time.get('content')
+                        if content.endswith('Z'):
+                            content = content.replace('Z', '+00:00')
+                        dt = datetime.fromisoformat(content)
+                        # 移除时区信息
+                        if dt.tzinfo:
+                            dt = dt.replace(tzinfo=None)
+                        return dt
+                    except Exception as e:
+                        print(f'Error parsing meta time: {e}')
+                        pass
+                
+                # 新华网
+                if site_name == '新华网':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time-source, .date-source, .pubtime, .article-info')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 人民网
+                elif site_name == '人民网':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.article-info, .article-meta, .time, .pubtime')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 央视网
+                elif site_name == '央视网':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.publish_time, .info, .time, .pubtime, .article-meta')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 央视新闻
+                elif site_name == '央视新闻':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 第一财经
+                elif site_name == '第一财经':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 21世纪经济报道
+                elif site_name == '21世纪经济报道':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 每日经济新闻
+                elif site_name == '每日经济新闻':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 新浪新闻
+                elif site_name == '新浪新闻':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 网易新闻
+                elif site_name == '网易新闻':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 腾讯新闻
+                elif site_name == '腾讯新闻':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 凤凰网
+                elif site_name == '凤凰网':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 今日头条
+                elif site_name == '今日头条':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 一点资讯
+                elif site_name == '一点资讯':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 36氪
+                elif site_name == '36氪':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 钛媒体
+                elif site_name == '钛媒体':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 虎嗅
+                elif site_name == '虎嗅':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 亿欧网
+                elif site_name == '亿欧网':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # PingWest
+                elif site_name == 'PingWest':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 爱范儿
+                elif site_name == '爱范儿':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 华尔街见闻
+                elif site_name == '华尔街见闻':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 东方财富网
+                elif site_name == '东方财富网':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 金融界
+                elif site_name == '金融界':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 中国证券报
+                elif site_name == '中国证券报':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # CNN
+                elif site_name == 'CNN':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # AP新闻
+                elif site_name == 'AP新闻':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # NHK世界
+                elif site_name == 'NHK世界':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 洛杉矶时报
+                elif site_name == '洛杉矶时报':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .date, .publish-time, .article-time, [datetime], .time-source, .news-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 中国新闻网
+                elif site_name == '中国新闻网':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.info, .time, .pubtime, .article-meta')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 环球网
+                elif site_name == '环球网':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .pubtime, .info, .article-meta')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 新浪新闻
+                elif site_name == '新浪新闻':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .pubtime, .info, .article-meta, .date')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 网易新闻
+                elif site_name == '网易新闻':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .pubtime, .info, .article-meta, .post-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 腾讯新闻
+                elif site_name == '腾讯新闻':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .pubtime, .info, .article-meta, .article-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 凤凰网
+                elif site_name == '凤凰网':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .pubtime, .info, .article-meta, .article-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 今日头条
+                elif site_name == '今日头条':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .pubtime, .info, .article-meta, .article-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 澎湃新闻
+                elif site_name == '澎湃新闻':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .pubtime, .info, .article-meta, .article-time, .publish-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                # 界面新闻
+                elif site_name == '界面新闻':
+                    # 尝试从特定类名获取
+                    time_elem = soup.select_one('.time, .pubtime, .info, .article-meta, .article-time, .publish-time')
+                    if time_elem:
+                        time_text = time_elem.get_text(strip=True)
+                        import re
+                        # 匹配多种时间格式
+                        patterns = [
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}',
+                            r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}',
+                            r'\d{4}年\d{1,2}月\d{1,2}日'
+                        ]
+                        for pattern in patterns:
+                            match = re.search(pattern, time_text)
+                            if match:
+                                try:
+                                    if '-' in match.group():
+                                        if ':' in match.group():
+                                            if match.group().count(':') == 2:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                            else:
+                                                return datetime.strptime(match.group(), '%Y-%m-%d %H:%M')
+                                    elif '年' in match.group():
+                                        if ':' in match.group():
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日 %H:%M')
+                                        else:
+                                            return datetime.strptime(match.group(), '%Y年%m月%d日')
+                                except:
+                                    pass
+                
+                return None
+            
+            # 尝试从网页中提取发布时间
+            def extract_publish_time(soup, site_name):
+                # 首先尝试针对特定网站的提取策略
+                site_time = extract_time_for_site(soup, site_name)
+                if site_time:
+                    print(f'Found time from site-specific strategy: {site_time}')
+                    return site_time
+                
+                # 尝试从meta标签中提取时间信息
+                meta_selectors = [
+                    'meta[property="article:published_time"]',
+                    'meta[name="article:published_time"]',
+                    'meta[property="og:published_time"]',
+                    'meta[name="og:published_time"]',
+                    'meta[property="datePublished"]',
+                    'meta[name="datePublished"]',
+                    'meta[name="pubdate"]',
+                    'meta[name="publish_date"]',
+                    'meta[name="date"]',
+                    'meta[http-equiv="date"]'
+                ]
+                
+                for selector in meta_selectors:
+                    meta_elem = soup.select_one(selector)
+                    if meta_elem and meta_elem.get('content'):
+                        try:
+                            content = meta_elem.get('content')
+                            # 尝试解析ISO格式时间
+                            dt = datetime.fromisoformat(content.replace('Z', '+00:00'))
+                            print(f'Found time from meta tag: {dt}')
+                            return dt
+                        except Exception as e:
+                            print(f'Error parsing meta tag time: {e}')
+                            pass
+                
+                # 常见的时间标签和类名
+                time_selectors = [
+                    'time',
+                    '.time',
+                    '.date',
+                    '.publish-time',
+                    '.post-time',
+                    '.article-time',
+                    '[datetime]',
+                    '.news-time',
+                    '.time-source',
+                    '.article-meta-time',
+                    '.article-time',
+                    '.date-time',
+                    '.publishDate',
+                    '.post-date',
+                    '.news-date',
+                    '.article-date',
+                    '.time-stamp',
+                    '.timestamp',
+                    '.date-time-group',
+                    '.article-info-time',
+                    '.news-info-time',
+                    '.content-time',
+                    '.text-time',
+                    '.info-time',
+                    '.data-source',
+                    '.time-source',
+                    '.source-time',
+                    '.news-meta-time',
+                    '.article-meta',
+                    '.pubtime',
+                    '.publish_time',
+                    '.article-meta-time',
+                    '.article-info',
+                    '.news-meta',
+                    '.meta-info',
+                    '.info',
+                    '.date_info',
+                    '.time-info',
+                    '.publishinfo',
+                    '.article-date-time',
+                    '.news-date-time',
+                    '.post-time',
+                    '.article-time',
+                    '.content-time',
+                    '.text-time',
+                    '.info-time',
+                    '.data-source',
+                    '.time-source',
+                    '.source-time',
+                    '.news-meta-time',
+                    '.article-meta',
+                    '.pubtime',
+                    '.publish_time',
+                    '.article-meta-time',
+                    '.article-info',
+                    '.news-meta',
+                    '.meta-info',
+                    '.info',
+                    '.date_info',
+                    '.time-info',
+                    '.publishinfo',
+                    '.article-date-time',
+                    '.news-date-time'
+                ]
+                
+                for selector in time_selectors:
+                    time_elem = soup.select_one(selector)
+                    if time_elem:
+                        # 尝试从datetime属性获取
+                        if time_elem.get('datetime'):
+                            try:
+                                dt = datetime.fromisoformat(time_elem.get('datetime').replace('Z', '+00:00'))
+                                print(f'Found time from datetime attribute: {dt}')
+                                return dt
+                            except Exception as e:
+                                print(f'Error parsing datetime attribute: {e}')
+                                pass
+                        # 尝试从data-time属性获取
+                        if time_elem.get('data-time'):
+                            try:
+                                data_time = time_elem.get('data-time')
+                                # 尝试解析为时间戳
+                                try:
+                                    timestamp = int(data_time)
+                                    dt = datetime.fromtimestamp(timestamp)
+                                    print(f'Found time from data-time attribute (timestamp): {dt}')
+                                    return dt
+                                except:
+                                    # 尝试解析为字符串格式时间
+                                    try:
+                                        # 尝试多种时间格式
+                                        formats = ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y/%m/%d %H:%M:%S', '%Y/%m/%d %H:%M']
+                                        for fmt in formats:
+                                            try:
+                                                dt = datetime.strptime(data_time, fmt)
+                                                print(f'Found time from data-time attribute (string): {dt}')
+                                                return dt
+                                            except:
+                                                pass
+                                    except Exception as e:
+                                        print(f'Error parsing data-time attribute as string: {e}')
+                                        pass
+                            except Exception as e:
+                                print(f'Error parsing data-time attribute: {e}')
+                                pass
+                        # 尝试从data-publishtime属性获取
+                        if time_elem.get('data-publishtime'):
+                            try:
+                                timestamp = int(time_elem.get('data-publishtime'))
+                                dt = datetime.fromtimestamp(timestamp)
+                                print(f'Found time from data-publishtime attribute: {dt}')
+                                return dt
+                            except Exception as e:
+                                print(f'Error parsing data-publishtime attribute: {e}')
+                                pass
+                        # 尝试从data-original-time属性获取
+                        if time_elem.get('data-original-time'):
+                            try:
+                                timestamp = int(time_elem.get('data-original-time'))
+                                dt = datetime.fromtimestamp(timestamp)
+                                print(f'Found time from data-original-time attribute: {dt}')
+                                return dt
+                            except Exception as e:
+                                print(f'Error parsing data-original-time attribute: {e}')
+                                pass
+                        # 尝试从文本内容获取
+                        time_text = time_elem.get_text(strip=True)
+                        if time_text:
+                            # 尝试解析常见的时间格式
+                            import re
+                            # 匹配 YYYY-MM-DD HH:MM:SS 格式
+                            match = re.search(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', time_text)
+                            if match:
+                                try:
+                                    dt = datetime.strptime(match.group(), '%Y-%m-%d %H:%M:%S')
+                                    print(f'Found time from text (YYYY-MM-DD HH:MM:SS): {dt}')
+                                    return dt
+                                except Exception as e:
+                                    print(f'Error parsing YYYY-MM-DD HH:MM:SS: {e}')
+                                    pass
+                            # 匹配 YYYY/MM/DD HH:MM 格式
+                            match = re.search(r'\d{4}/\d{2}/\d{2} \d{2}:\d{2}', time_text)
+                            if match:
+                                try:
+                                    dt = datetime.strptime(match.group(), '%Y/%m/%d %H:%M')
+                                    print(f'Found time from text (YYYY/MM/DD HH:MM): {dt}')
+                                    return dt
+                                except Exception as e:
+                                    print(f'Error parsing YYYY/MM/DD HH:MM: {e}')
+                                    pass
+                            # 匹配 MM月DD日 HH:MM 格式
+                            match = re.search(r'\d{1,2}月\d{1,2}日 \d{2}:\d{2}', time_text)
+                            if match:
+                                try:
+                                    # 提取月日
+                                    month_day = match.group()
+                                    # 添加当前年份
+                                    year = datetime.now().year
+                                    date_str = f'{year}年{month_day}'
+                                    dt = datetime.strptime(date_str, '%Y年%m月%d日 %H:%M')
+                                    print(f'Found time from text (MM月DD日 HH:MM): {dt}')
+                                    return dt
+                                except Exception as e:
+                                    print(f'Error parsing MM月DD日 HH:MM: {e}')
+                                    pass
+                            # 匹配 YYYY年MM月DD日格式
+                            match = re.search(r'\d{4}年\d{1,2}月\d{1,2}日', time_text)
+                            if match:
+                                try:
+                                    dt = datetime.strptime(match.group(), '%Y年%m月%d日')
+                                    print(f'Found time from text (YYYY年MM月DD日): {dt}')
+                                    return dt
+                                except Exception as e:
+                                    print(f'Error parsing YYYY年MM月DD日: {e}')
+                                    pass
+                            # 匹配 HH:MM格式
+                            match = re.search(r'\d{2}:\d{2}', time_text)
+                            if match:
+                                try:
+                                    # 只有时间部分，使用当前日期
+                                    today = datetime.now().strftime('%Y-%m-%d')
+                                    full_time = f'{today} {match.group()}'
+                                    dt = datetime.strptime(full_time, '%Y-%m-%d %H:%M')
+                                    print(f'Found time from text (HH:MM): {dt}')
+                                    return dt
+                                except Exception as e:
+                                    print(f'Error parsing HH:MM: {e}')
+                                    pass
+                            # 匹配 几分钟前、几小时前、几天前格式
+                            match = re.search(r'(\d+)分钟前|(\d+)小时前|(\d+)天前', time_text)
+                            if match:
+                                try:
+                                    if match.group(1):
+                                        dt = datetime.now() - timedelta(minutes=int(match.group(1)))
+                                        print(f'Found time from text (minutes ago): {dt}')
+                                        return dt
+                                    elif match.group(2):
+                                        dt = datetime.now() - timedelta(hours=int(match.group(2)))
+                                        print(f'Found time from text (hours ago): {dt}')
+                                        return dt
+                                    elif match.group(3):
+                                        dt = datetime.now() - timedelta(days=int(match.group(3)))
+                                        print(f'Found time from text (days ago): {dt}')
+                                        return dt
+                                except Exception as e:
+                                    print(f'Error parsing relative time: {e}')
+                                    pass
+                print('No time found, returning current time')
+                return datetime.now()
+            
+            # 打印调试信息
+            print(f'Extracting publish time for {source_info["name"]}...')
+            
+            # 获取页面级别的发布时间
+            page_publish_time = extract_publish_time(soup, source_info["name"])
+            print(f'Page publish time for {source_info["name"]}: {page_publish_time}')
+            
             links = soup.find_all('a', href=True)
             news_count = 0
             
@@ -218,12 +1645,98 @@ class NewsFetcher:
                         else:
                             continue
                     
+                    # 对于每个链接，尝试获取其所在上下文中的时间
+                    publish_time = page_publish_time
+                    # 查找链接的父元素，尝试从中提取时间
+                    parent = link.parent
+                    for _ in range(3):  # 向上查找3级父元素
+                        if parent:
+                            time_elem = parent.select_one('time, .time, .date, .publish-time')
+                            if time_elem:
+                                time_text = time_elem.get_text(strip=True)
+                                if time_text:
+                                    import re
+                                    match = re.search(r'\d{4}-\d{2}-\d{2}|\d{2}:\d{2}', time_text)
+                                    if match:
+                                        # 如果找到时间，使用页面级别的日期加上找到的时间
+                                        try:
+                                            # 尝试解析时间部分
+                                            time_part = match.group()
+                                            if ':' in time_part:
+                                                # 只有时间部分，使用页面级别的日期
+                                                date_part = page_publish_time.strftime('%Y-%m-%d')
+                                                full_time = f'{date_part} {time_part}'
+                                                publish_time = datetime.strptime(full_time, '%Y-%m-%d %H:%M')
+                                            elif '-' in time_part:
+                                                # 有日期部分，使用完整日期
+                                                publish_time = datetime.strptime(time_part, '%Y-%m-%d')
+                                        except:
+                                            pass
+                                    break
+                            parent = parent.parent
+                    
+                    # 尝试从标题中提取时间
+                    import re
+                    # 尝试从标题中提取绝对时间
+                    time_match = re.search(r'(\d{4}-\d{2}-\d{2})|(\d{4}年\d{1,2}月\d{1,2}日)', title)
+                    if time_match:
+                        time_str = time_match.group()
+                        try:
+                            if '-' in time_str:
+                                publish_time = datetime.strptime(time_str, '%Y-%m-%d')
+                            else:
+                                publish_time = datetime.strptime(time_str, '%Y年%m月%d日')
+                            print(f'Found time from title: {publish_time}')
+                        except:
+                            pass
+                    # 尝试从标题中提取相对时间（如：20分钟前、1小时前）
+                    relative_time_match = re.search(r'(\d+)\s*(分钟|小时|天)前', title)
+                    if relative_time_match:
+                        try:
+                            num = int(relative_time_match.group(1))
+                            unit = relative_time_match.group(2)
+                            if unit == '分钟':
+                                publish_time = datetime.now() - timedelta(minutes=num)
+                            elif unit == '小时':
+                                publish_time = datetime.now() - timedelta(hours=num)
+                            elif unit == '天':
+                                publish_time = datetime.now() - timedelta(days=num)
+                            print(f'Found time from relative time in title: {publish_time}')
+                        except:
+                            pass
+                    
+                    # 尝试从详情页面提取发布时间
+                    try:
+                        # 访问详情页面
+                        detail_response = self.get_with_retry(href, timeout=5)
+                        if detail_response:
+                            detail_soup = BeautifulSoup(detail_response.text, 'lxml')
+                            # 尝试从详情页面提取时间
+                            detail_time = extract_publish_time(detail_soup, source_info["name"])
+                            # 检查提取的时间是否合理（不早于一年前）
+                            one_year_ago = datetime.now() - timedelta(days=365)
+                            if detail_time > one_year_ago:
+                                # 计算时间差，确保不是当前时间（允许1分钟的误差）
+                                time_diff = abs((datetime.now() - detail_time).total_seconds())
+                                if time_diff > 60:
+                                    publish_time = detail_time
+                                    print(f'Updated publish time for {title[:20]}...: {publish_time}')
+                                else:
+                                    # 打印调试信息，了解为什么没有更新时间
+                                    print(f'No valid time found for {title[:20]}...: {detail_time}')
+                    except Exception as e:
+                        print(f'Error fetching detail page for {title[:20]}...: {e}')
+                    
+                    # 确保时间不超过24小时
+                    if datetime.now() - publish_time > timedelta(hours=24):
+                        continue
+                    
                     news = {
                         'id': self.get_hash(title),
                         'title': title,
                         'source': source_info['name'],
                         'url': href,
-                        'publish_time': datetime.now().isoformat(),
+                        'publish_time': publish_time.isoformat(),
                         'views': random.randint(1000, 100000),
                         'comments': random.randint(10, 5000),
                         'forwards': random.randint(5, 2000),
