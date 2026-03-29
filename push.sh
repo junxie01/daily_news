@@ -8,6 +8,18 @@ echo "=== 开始推送代码到 GitHub ==="
 echo "检查当前目录状态..."
 git status
 
+# 检查是否有未提交的更改
+if git status --porcelain | grep -q .; then
+    echo "有未提交的更改，先提交..."
+    # 添加所有更改的文件
+    echo "添加所有更改的文件..."
+    git add .
+    
+    # 提交更改
+    echo "提交更改..."
+    git commit -m "Update: $(date '+%Y-%m-%d %H:%M:%S')"
+fi
+
 # 拉取远程更改
 echo "拉取远程更改..."
 git pull --rebase git@github.com:junxie01/daily_news.git main
@@ -18,13 +30,17 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# 添加所有更改的文件
-echo "添加所有更改的文件..."
-git add .
-
-# 提交更改
-echo "提交更改..."
-git commit -m "Update: $(date '+%Y-%m-%d %H:%M:%S')"
+# 再次检查是否有更改（可能是rebase产生的）
+if git status --porcelain | grep -q .; then
+    echo "有更改需要提交..."
+    # 添加所有更改的文件
+    echo "添加所有更改的文件..."
+    git add .
+    
+    # 提交更改
+    echo "提交更改..."
+    git commit -m "Update: $(date '+%Y-%m-%d %H:%M:%S')"
+fi
 
 # 推送到GitHub仓库（使用SSH方式）
 echo "推送到GitHub仓库..."
