@@ -8,6 +8,16 @@ echo "=== 开始推送代码到 GitHub ==="
 echo "检查当前目录状态..."
 git status
 
+# 拉取远程更改
+echo "拉取远程更改..."
+git pull --rebase git@github.com:junxie01/daily_news.git main
+
+# 处理冲突（如果有）
+if [ $? -ne 0 ]; then
+    echo "拉取时出现冲突，请手动解决冲突后再运行此脚本"
+    exit 1
+fi
+
 # 添加所有更改的文件
 echo "添加所有更改的文件..."
 git add .
