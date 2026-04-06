@@ -1929,6 +1929,155 @@ class NewsFetcher:
         except Exception as e:
             print(f'知乎 fetch error: {e}')
 
+    def fetch_xiaohongshu(self):
+        try:
+            # 小红书热门内容
+            url = 'https://www.xiaohongshu.com/explore'
+            response = self.get_with_retry(url, timeout=self.timeout)
+            if not response:
+                print(f'Failed to fetch 小红书 after {self.max_retries} attempts')
+                return
+            
+            soup = BeautifulSoup(response.text, 'lxml')
+            
+            # 查找热门笔记
+            notes = soup.select('.note-item')
+            
+            for note in notes[:30]:
+                try:
+                    title_elem = note.select_one('.title')
+                    if not title_elem:
+                        continue
+                    
+                    title = title_elem.get_text(strip=True)
+                    if not title:
+                        continue
+                    
+                    link_elem = note.select_one('a')
+                    if not link_elem:
+                        continue
+                    
+                    href = link_elem.get('href')
+                    if not href:
+                        continue
+                    
+                    url = f'https://www.xiaohongshu.com{href}'
+                    
+                    # 提取热度信息
+                    like_elem = note.select_one('.like-count')
+                    like_count = 0
+                    if like_elem:
+                        like_text = like_elem.get_text(strip=True)
+                        if like_text:
+                            try:
+                                if 'k' in like_text:
+                                    like_count = int(float(like_text.replace('k', '')) * 1000)
+                                else:
+                                    like_count = int(like_text)
+                            except:
+                                pass
+                    
+                    comment_elem = note.select_one('.comment-count')
+                    comment_count = 0
+                    if comment_elem:
+                        comment_text = comment_elem.get_text(strip=True)
+                        if comment_text:
+                            try:
+                                if 'k' in comment_text:
+                                    comment_count = int(float(comment_text.replace('k', '')) * 1000)
+                                else:
+                                    comment_count = int(comment_text)
+                            except:
+                                pass
+                    
+                    publish_time = datetime.now()
+                    
+                    news = {
+                        'id': self.get_hash(title),
+                        'title': title,
+                        'source': '小红书',
+                        'url': url,
+                        'publish_time': publish_time.isoformat(),
+                        'views': like_count * 10,  # 假设每个点赞对应10次浏览
+                        'comments': comment_count,
+                        'forwards': 0,
+                        'favorites': like_count,
+                        'recommendations': like_count * 5,
+                        'content': ''
+                    }
+                    self.news_list.append(news)
+                except Exception as e:
+                    continue
+        except Exception as e:
+            print(f'小红书 fetch error: {e}')
+
+    def fetch_wechat(self):
+        try:
+            # 微信热门文章 - 使用第三方聚合API
+            url = 'https://weixin.sogou.com/'
+            response = self.get_with_retry(url, timeout=self.timeout)
+            if not response:
+                print(f'Failed to fetch 微信 after {self.max_retries} attempts')
+                return
+            
+            soup = BeautifulSoup(response.text, 'lxml')
+            
+            # 查找热门文章
+            articles = soup.select('.news-list li')
+            
+            for article in articles[:30]:
+                try:
+                    title_elem = article.select_one('h3')
+                    if not title_elem:
+                        continue
+                    
+                    title = title_elem.get_text(strip=True)
+                    if not title:
+                        continue
+                    
+                    link_elem = article.select_one('a')
+                    if not link_elem:
+                        continue
+                    
+                    url = link_elem.get('href')
+                    if not url:
+                        continue
+                    
+                    # 提取热度信息
+                    info_elem = article.select_one('.info')
+                    read_count = 0
+                    if info_elem:
+                        info_text = info_elem.get_text(strip=True)
+                        if info_text:
+                            import re
+                            match = re.search(r'阅读 (\d+)', info_text)
+                            if match:
+                                try:
+                                    read_count = int(match.group(1))
+                                except:
+                                    pass
+                    
+                    publish_time = datetime.now()
+                    
+                    news = {
+                        'id': self.get_hash(title),
+                        'title': title,
+                        'source': '微信',
+                        'url': url,
+                        'publish_time': publish_time.isoformat(),
+                        'views': read_count,
+                        'comments': 0,
+                        'forwards': 0,
+                        'favorites': read_count // 10,  # 假设每10次阅读对应1个收藏
+                        'recommendations': read_count // 5,  # 假设每5次阅读对应1个推荐
+                        'content': ''
+                    }
+                    self.news_list.append(news)
+                except Exception as e:
+                    continue
+        except Exception as e:
+            print(f'微信 fetch error: {e}')
+
     def fetch_sample_data(self):
         sample_news = [
             {
@@ -2056,6 +2205,14 @@ class NewsFetcher:
         
         print('Fetching 知乎...')
         self.fetch_zhihu()
+        time.sleep(random.uniform(1, 2))
+        
+        print('Fetching 小红书...')
+        self.fetch_xiaohongshu()
+        time.sleep(random.uniform(1, 2))
+        
+        print('Fetching 微信...')
+        self.fetch_wechat()
         time.sleep(random.uniform(1, 2))
 
     def deduplicate_and_aggregate(self):
