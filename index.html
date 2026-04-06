@@ -307,7 +307,7 @@
             container.innerHTML = '';
 
             displayNews.forEach((news, index) => {
-                const rank = currentView === 'top' ? index + 1 : sorted.length - 20 + index + 1;
+                const rank = index + 1;
                 const item = document.createElement('div');
                 item.className = 'news-item';
                 item.innerHTML = `
