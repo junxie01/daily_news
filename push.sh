@@ -28,11 +28,24 @@ git pull --rebase git@github.com:junxie01/daily_news.git main
 if [ $? -ne 0 ]; then
     echo "拉取时出现冲突，尝试自动解决..."
     
-    # 检查是否有data/news.json文件的冲突
+    # 检查是否有data/news.json或data/brief.json文件的冲突
+    conflict_resolved=false
+    
     if git status --porcelain | grep -q "UU data/news.json"; then
         echo "检测到data/news.json文件冲突，使用本地版本覆盖..."
         git checkout --ours data/news.json
         git add data/news.json
+        conflict_resolved=true
+    fi
+    
+    if git status --porcelain | grep -q "UU data/brief.json"; then
+        echo "检测到data/brief.json文件冲突，使用本地版本覆盖..."
+        git checkout --ours data/brief.json
+        git add data/brief.json
+        conflict_resolved=true
+    fi
+    
+    if [ "$conflict_resolved" = true ]; then
         git rebase --continue
     else
         echo "无法自动解决冲突，请手动解决冲突后再运行此脚本"

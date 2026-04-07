@@ -1,37 +1,93 @@
-name: Update Hot News
+name: Update Hot News and Deploy
 
 on:
   schedule:
     - cron: '0 23 * * *'  # 北京时间7点
   workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   update:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         persist-credentials: true
-      
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        
+
     - name: Fetch and process news
       run: |
         python scripts/fetch_news.py
-        
+
+    - name: Generate AI Brief
+      env:
+        DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        DEEPSEEK_BASE_URL: ${{ secrets.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1' }}
+        DEEPSEEK_MODEL: ${{ secrets.DEEPSEEK_MODEL || 'deepseek-chat' }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL || 'https://api.openai.com/v1' }}
+        OPENAI_MODEL: ${{ secrets.OPENAI_MODEL || 'gpt-4o-mini' }}
+        MOONSHOT_API_KEY: ${{ secrets.MOONSHOT_API_KEY }}
+        MOONSHOT_BASE_URL: ${{ secrets.MOONSHOT_BASE_URL || 'https://api.moonshot.cn/v1' }}
+        MOONSHOT_MODEL: ${{ secrets.MOONSHOT_MODEL || 'moonshot-v1-8k' }}
+        QWEN_API_KEY: ${{ secrets.QWEN_API_KEY }}
+        QWEN_BASE_URL: ${{ secrets.QWEN_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1' }}
+        QWEN_MODEL: ${{ secrets.QWEN_MODEL || 'qwen-turbo' }}
+        DEFAULT_AI_PROVIDER: ${{ secrets.DEFAULT_AI_PROVIDER || 'qwen' }}
+      run: |
+        python scripts/generate_brief.py
+
     - name: Commit and push changes
       uses: EndBug/add-and-commit@v9
       with:
-        message: "Update hot news $(date '+%Y-%m-%d')"
-        add: "data/news.json"
+        message: "Update hot news and AI brief $(date '+%Y-%m-%d')"
+        add: |
+          data/news.json
+          data/brief.json
         push: true
+
+  deploy:
+    needs: update
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Pages
+      uses: actions/configure-pages@v5
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.'
+
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

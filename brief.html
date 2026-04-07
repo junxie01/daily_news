@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI新闻简报 - 科研学者专属</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            color: #333;
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%);
+            color: white;
+            margin-bottom: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        header .subtitle {
+            font-size: 1em;
+            opacity: 0.95;
+            margin-bottom: 15px;
+        }
+
+        .update-time {
+            font-size: 0.9em;
+            opacity: 0.85;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 20px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .brief-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s;
+        }
+
+        .brief-section:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-icon {
+            font-size: 1.8em;
+            margin-right: 15px;
+        }
+
+        .section-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #1a2a6c;
+        }
+
+        .section-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 12px;
+            font-size: 0.9em;
+        }
+
+        .news-highlight {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+            border-left: 4px solid #fdbb2d;
+            padding: 20px;
+            border-radius: 0 10px 10px 0;
+            margin-bottom: 15px;
+        }
+
+        .news-highlight h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .news-list {
+            list-style: none;
+        }
+
+        .news-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .news-list li:last-child {
+            border-bottom: none;
+        }
+
+        .news-bullet {
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .news-item-title {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .news-item-source {
+            font-size: 0.85em;
+            color: #888;
+        }
+
+        .insight-box {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1ecf1 100%);
+            border-left: 4px solid #17a2b8;
+            padding: 20px;
+            border-radius: 0 10px 10px 0;
+            margin-top: 15px;
+        }
+
+        .insight-box h4 {
+            color: #0c5460;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .insight-box p {
+            color: #0c5460;
+            line-height: 1.8;
+        }
+
+        .reference-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .reference-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .reference-card h4 {
+            color: #495057;
+            font-size: 0.95em;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .reference-card p {
+            font-size: 0.9em;
+            color: #6c757d;
+            line-height: 1.6;
+        }
+
+        .learning-track {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .learning-track h4 {
+            color: #6a1b9a;
+            margin-bottom: 15px;
+        }
+
+        .learning-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed #ce93d8;
+        }
+
+        .learning-item:last-child {
+            border-bottom: none;
+        }
+
+        .learning-number {
+            background: #6a1b9a;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .knowledge-expand {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .knowledge-term {
+            background: #2e7d32;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .knowledge-section {
+            margin-bottom: 20px;
+        }
+
+        .knowledge-section h4 {
+            color: #1b5e20;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .knowledge-section p {
+            color: #2e7d32;
+            line-height: 1.8;
+            padding-left: 28px;
+        }
+
+        .tag {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #888;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.6em;
+            }
+
+            .brief-section {
+                padding: 20px;
+            }
+
+            .reference-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📰 AI 新闻简报</h1>
+            <p class="subtitle">专为科研学者定制 · 洞察世界 · 启发思考</p>
+            <p class="update-time" id="updateTime">加载中...</p>
+        </header>
+
+        <div id="briefContent">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>AI 正在分析今日新闻...</p>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="index.html" class="back-button">← 返回热点资讯</a>
+        </div>
+
+        <footer>
+            <p>AI 智能分析 · 每日更新 · 为科研学者提供有价值的资讯洞察</p>
+        </footer>
+    </div>
+
+    <script>
+        // 用户画像配置
+        const userProfile = {
+            age: 40,
+            occupation: '基础科研学者',
+            interests: ['科研进展', '世界大事', '投资机会', '学术趋势', '科技发展'],
+            goals: ['做好科研', '了解世界', '增加收入']
+        };
+
+        async function loadBriefData() {
+            try {
+                // 首先尝试加载AI生成的简报
+                const briefResponse = await fetch('data/brief.json');
+                if (briefResponse.ok) {
+                    const briefData = await briefResponse.json();
+                    renderAIBrief(briefData);
+                    return;
+                }
+
+                // 如果没有AI简报，回退到原始新闻数据
+                const newsResponse = await fetch('data/news.json');
+                if (!newsResponse.ok) throw new Error('Failed to load data');
+                const data = await newsResponse.json();
+
+                document.getElementById('updateTime').textContent =
+                    `简报生成时间: ${new Date(data.update_time).toLocaleString('zh-CN')}`;
+
+                generateBrief(data.news);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('briefContent').innerHTML = `
+                    <div class="brief-section">
+                        <p style="text-align: center; color: #888;">暂无数据，请先运行爬虫脚本获取新闻</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderAIBrief(briefData) {
+            const meta = briefData.meta || {};
+            document.getElementById('updateTime').innerHTML =
+                `简报生成时间: ${new Date(meta.generated_at || Date.now()).toLocaleString('zh-CN')}` +
+                `<br><small style="opacity: 0.8;">由 ${meta.ai_provider || 'AI'} 生成 · 基于 ${meta.news_count || 0} 条新闻</small>`;
+
+            const s1 = briefData.section1;
+            const s2 = briefData.section2;
+            const s3 = briefData.section3;
+            const s4 = briefData.section4;
+
+            const briefHTML = `
+                <!-- 第一部分：今日值得关注的新闻 -->
+                <div class="brief-section">
+                    <div class="section-header">
+                        <div class="section-number">1</div>
+                        <h2 class="section-title">今日值得关注的新闻</h2>
+                    </div>
+                    <div class="news-highlight">
+                        <h3>🔥 头条聚焦：${escapeHtml(s1.headline)}</h3>
+                        <p style="color: #856404; line-height: 1.8; margin-top: 10px;">
+                            ${escapeHtml(s1.headline_analysis)}
+                        </p>
+                    </div>
+                    <ul class="news-list">
+                        ${s1.top_news.map((news, index) => `
+                            <li>
+                                <span class="news-bullet">${index + 1}</span>
+                                <div>
+                                    <div class="news-item-title">${escapeHtml(news.title)}</div>
+                                    <div class="news-item-source">${escapeHtml(news.source)} · ${escapeHtml(news.relevance)}</div>
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <div class="insight-box">
+                        <h4>💡 趋势洞察</h4>
+                        <p>${escapeHtml(s1.trend_insight)}</p>
+                    </div>
+                </div>
+
+                <!-- 第二部分：对科研学者有参考意义的资讯 -->
+                <div class="brief-section">
+                    <div class="section-header">
+                        <div class="section-number">2</div>
+                        <h2 class="section-title">对科研学者有参考意义的资讯</h2>
+                    </div>
+                    <div class="reference-grid">
+                        <div class="reference-card">
+                            <h4>🔬 科研 funding 动态</h4>
+                            <p>${escapeHtml(s2.research_funding)}</p>
+                        </div>
+                        <div class="reference-card">
+                            <h4>💼 学术职业机会</h4>
+                            <p>${escapeHtml(s2.academic_opportunities)}</p>
+                        </div>
+                        <div class="reference-card">
+                            <h4>🌐 国际合作趋势</h4>
+                            <p>${escapeHtml(s2.international_trends)}</p>
+                        </div>
+                        <div class="reference-card" style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border-color: #ff9800;">
+                            <h4 style="color: #e65100;">📈 投资理财洞察</h4>
+                            <p style="color: #e65100;">${escapeHtml(s2.investment_insights)}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第三部分：值得学习和跟进的内容 -->
+                <div class="brief-section">
+                    <div class="section-header">
+                        <div class="section-number">3</div>
+                        <h2 class="section-title">值得学习和跟进的内容</h2>
+                    </div>
+                    <div class="learning-track">
+                        <h4>📚 推荐学习路径</h4>
+                        ${s3.learning_tracks.map((t, i) => `
+                            <div class="learning-item">
+                                <div class="learning-number">${i + 1}</div>
+                                <div>
+                                    <strong>${escapeHtml(t.title)}</strong>
+                                    <p style="font-size: 0.9em; color: #666; margin-top: 4px;">${escapeHtml(t.description)}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="insight-box" style="margin-top: 15px; background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border-left-color: #ff9800;">
+                        <h4 style="color: #e65100;">⚡ 行动建议</h4>
+                        <p style="color: #e65100;">${escapeHtml(s3.action_advice)}</p>
+                    </div>
+                </div>
+
+                <!-- 第四部分：相关知识扩展 -->
+                <div class="brief-section knowledge-expand">
+                    <div class="section-header" style="border-bottom-color: rgba(46, 125, 50, 0.3);">
+                        <div class="section-number" style="background: #2e7d32;">4</div>
+                        <h2 class="section-title" style="color: #1b5e20;">相关知识扩展</h2>
+                    </div>
+                    <div class="knowledge-term">${escapeHtml(s4.term)}</div>
+                    <div class="knowledge-section">
+                        <h4>📖 定义</h4>
+                        <p>${escapeHtml(s4.definition)}</p>
+                    </div>
+                    <div class="knowledge-section">
+                        <h4>📍 出处与由来</h4>
+                        <p>${escapeHtml(s4.origin)}</p>
+                    </div>
+                    <div class="knowledge-section">
+                        <h4>❓ 为什么对科研学者重要</h4>
+                        <p>${escapeHtml(s4.importance)}</p>
+                    </div>
+                    <div class="knowledge-section">
+                        <h4>🚀 发展趋势</h4>
+                        <p>${escapeHtml(s4.trends)}</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('briefContent').innerHTML = briefHTML;
+        }
+
+        function generateBrief(newsData) {
+            // 按热度排序获取Top新闻
+            const sortedNews = [...newsData].sort((a, b) => b.hotness - a.hotness);
+            const topNews = sortedNews.slice(0, 30);
+
+            // 分类新闻
+            const categories = categorizeNews(topNews);
+
+            // 生成简报HTML
+            const briefHTML = `
+                <!-- 第一部分：今日值得关注的新闻 -->
+                <div class="brief-section">
+                    <div class="section-header">
+                        <div class="section-number">1</div>
+                        <h2 class="section-title">今日值得关注的新闻</h2>
+                    </div>
+                    <div class="news-highlight">
+                        <h3>🔥 头条聚焦</h3>
+                        <p style="color: #856404; line-height: 1.8;">
+                            今日最受关注的新闻是：<strong>${topNews[0]?.title || '暂无数据'}</strong>。
+                            这条新闻来自${topNews[0]?.source || '未知来源'}，
+                            热度值达到 ${topNews[0]?.hotness || 0}，
+                            反映了当前社会对该话题的高度关注。
+                        </p>
+                    </div>
+                    <ul class="news-list">
+                        ${topNews.slice(1, 6).map((news, index) => `
+                            <li>
+                                <span class="news-bullet">•</span>
+                                <div>
+                                    <div class="news-item-title">${escapeHtml(news.title)}</div>
+                                    <div class="news-item-source">${escapeHtml(news.source)} · 热度 ${news.hotness}</div>
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <div class="insight-box">
+                        <h4>💡 趋势洞察</h4>
+                        <p>${generateTrendInsight(categories)}</p>
+                    </div>
+                </div>
+
+                <!-- 第二部分：对科研学者有参考意义的资讯 -->
+                <div class="brief-section">
+                    <div class="section-header">
+                        <div class="section-number">2</div>
+                        <h2 class="section-title">对科研学者有参考意义的资讯</h2>
+                    </div>
+                    <div class="reference-grid">
+                        <div class="reference-card">
+                            <h4>🔬 科研 funding 动态</h4>
+                            <p>${findResearchFundingNews(topNews)}</p>
+                        </div>
+                        <div class="reference-card">
+                            <h4>💼 学术职业机会</h4>
+                            <p>${findAcademicOpportunities(topNews)}</p>
+                        </div>
+                        <div class="reference-card">
+                            <h4>🌐 国际合作趋势</h4>
+                            <p>${findInternationalNews(topNews)}</p>
+                        </div>
+                        <div class="reference-card">
+                            <h4>📈 科技投资风向</h4>
+                            <p>${findTechInvestmentNews(topNews)}</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <span class="tag">科研政策</span>
+                        <span class="tag">学术趋势</span>
+                        <span class="tag">资金机会</span>
+                        <span class="tag">国际合作</span>
+                    </div>
+                </div>
+
+                <!-- 第三部分：值得学习和跟进的内容 -->
+                <div class="brief-section">
+                    <div class="section-header">
+                        <div class="section-number">3</div>
+                        <h2 class="section-title">值得学习和跟进的内容</h2>
+                    </div>
+                    <div class="learning-track">
+                        <h4>📚 推荐学习路径</h4>
+                        ${generateLearningTrack(categories)}
+                    </div>
+                    <div class="insight-box" style="margin-top: 15px; background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border-left-color: #ff9800;">
+                        <h4 style="color: #e65100;">⚡ 行动建议</h4>
+                        <p style="color: #e65100;">
+                            ${generateActionAdvice(categories)}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 第四部分：相关知识扩展 -->
+                <div class="brief-section knowledge-expand">
+                    <div class="section-header" style="border-bottom-color: rgba(46, 125, 50, 0.3);">
+                        <div class="section-number" style="background: #2e7d32;">4</div>
+                        <h2 class="section-title" style="color: #1b5e20;">相关知识扩展</h2>
+                    </div>
+                    <div class="knowledge-term">${getKnowledgeTerm(categories)}</div>
+                    ${generateKnowledgeExpansion(categories)}
+                </div>
+            `;
+
+            document.getElementById('briefContent').innerHTML = briefHTML;
+        }
+
+        function categorizeNews(newsList) {
+            const categories = {
+                tech: [],
+                finance: [],
+                politics: [],
+                science: [],
+                education: [],
+                international: [],
+                other: []
+            };
+
+            const keywords = {
+                tech: ['科技', 'AI', '人工智能', '芯片', '半导体', '互联网', '数字化', '5G', '6G', '机器人', '自动驾驶', '新能源', '电动车', '光伏'],
+                finance: ['股市', '股票', '基金', '投资', '理财', '银行', '证券', '金融', '经济', '贸易', '关税', '汇率', '通胀', '降息'],
+                politics: ['政策', '政府', '会议', '法规', '法律', '改革', '监管', '国务院', '两会', '人大'],
+                science: ['科研', '学术', '研究', '论文', '专利', '创新', '实验室', '高校', '大学', '院士', '诺贝尔奖'],
+                education: ['教育', '高考', '学生', '教师', '学校', '招生', '就业', '培训'],
+                international: ['国际', '美国', '欧洲', '日本', '韩国', '俄罗斯', '中东', '联合国', '外交', '战争', '冲突']
+            };
+
+            newsList.forEach(news => {
+                const title = news.title || '';
+                let categorized = false;
+
+                for (const [cat, words] of Object.entries(keywords)) {
+                    if (words.some(word => title.includes(word))) {
+                        categories[cat].push(news);
+                        categorized = true;
+                        break;
+                    }
+                }
+
+                if (!categorized) {
+                    categories.other.push(news);
+                }
+            });
+
+            return categories;
+        }
+
+        function generateTrendInsight(categories) {
+            const maxCat = Object.entries(categories)
+                .sort((a, b) => b[1].length - a[1].length)[0];
+
+            const catNames = {
+                tech: '科技领域',
+                finance: '财经金融',
+                politics: '政策政务',
+                science: '科研学术',
+                education: '教育培训',
+                international: '国际事务',
+                other: '社会民生'
+            };
+
+            return `今日新闻分布显示，${catNames[maxCat[0]]}话题最为活跃，占比最高。建议关注该领域的发展动态，可能对你的科研或投资决策产生重要影响。`;
+        }
+
+        function findResearchFundingNews(newsList) {
+            const fundingKeywords = ['基金', '投资', '融资', '科研', '学术', '研究经费', '项目'];
+            const relevant = newsList.filter(n =>
+                fundingKeywords.some(k => n.title.includes(k))
+            );
+
+            if (relevant.length > 0) {
+                return `发现 ${relevant.length} 条相关资讯，包括：${relevant.slice(0, 2).map(n => n.title.substring(0, 30) + '...').join('、')}。建议关注科研 funding 机会。`;
+            }
+            return '今日暂无直接的科研 funding 资讯，建议关注科技投资板块寻找潜在机会。';
+        }
+
+        function findAcademicOpportunities(newsList) {
+            const academicKeywords = ['高校', '大学', '学术', '论文', '招聘', '人才', '教职'];
+            const relevant = newsList.filter(n =>
+                academicKeywords.some(k => n.title.includes(k))
+            );
+
+            if (relevant.length > 0) {
+                return `检测到 ${relevant.length} 条学术相关动态，可能包含职业机会或合作可能。`;
+            }
+            return '今日学术职业类资讯较少，建议持续关注高校人才招聘动态。';
+        }
+
+        function findInternationalNews(newsList) {
+            const intlKeywords = ['国际', '美国', '欧洲', '日本', '合作', '贸易', '外交'];
+            const relevant = newsList.filter(n =>
+                intlKeywords.some(k => n.title.includes(k))
+            );
+
+            if (relevant.length > 0) {
+                return `国际新闻占比 ${Math.round(relevant.length / newsList.length * 100)}%，国际合作与竞争态势值得持续关注。`;
+            }
+            return '今日国际资讯相对较少，可关注后续发展。';
+        }
+
+        function findTechInvestmentNews(newsList) {
+            const techKeywords = ['AI', '人工智能', '科技', '芯片', '半导体', '新能源'];
+            const relevant = newsList.filter(n =>
+                techKeywords.some(k => n.title.includes(k))
+            );
+
+            if (relevant.length > 0) {
+                return `科技投资热点：${relevant.slice(0, 2).map(n => n.title.substring(0, 25) + '...').join('、')}。科技领域持续活跃。`;
+            }
+            return '今日科技板块相对平静，可关注传统行业的数字化转型机会。';
+        }
+
+        function generateLearningTrack(categories) {
+            const tracks = [];
+
+            if (categories.tech.length > 0) {
+                tracks.push({
+                    title: '前沿科技追踪',
+                    desc: '关注 AI、芯片、新能源等领域最新进展'
+                });
+            }
+            if (categories.finance.length > 0) {
+                tracks.push({
+                    title: '财经素养提升',
+                    desc: '了解宏观经济形势，提升投资决策能力'
+                });
+            }
+            if (categories.international.length > 0) {
+                tracks.push({
+                    title: '国际视野拓展',
+                    desc: '关注国际局势，把握全球化机遇'
+                });
+            }
+
+            if (tracks.length === 0) {
+                tracks.push({
+                    title: '综合素养提升',
+                    desc: '广泛阅读，培养跨学科思维能力'
+                });
+            }
+
+            return tracks.map((t, i) => `
+                <div class="learning-item">
+                    <div class="learning-number">${i + 1}</div>
+                    <div>
+                        <strong>${t.title}</strong>
+                        <p style="font-size: 0.9em; color: #666; margin-top: 4px;">${t.desc}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function generateActionAdvice(categories) {
+            const advices = [];
+
+            if (categories.tech.length > 3) {
+                advices.push('科技新闻密集，建议关注是否有与自身研究领域结合的机会');
+            }
+            if (categories.finance.length > 3) {
+                advices.push('财经动态活跃，可考虑适当关注投资机会，但需理性决策');
+            }
+            if (categories.science.length > 0) {
+                advices.push('科研相关资讯出现，建议深入了解可能的合作或申请机会');
+            }
+
+            if (advices.length === 0) {
+                advices.push('今日资讯较为分散，建议保持日常学习节奏，持续关注各领域动态');
+            }
+
+            return advices.join('；') + '。';
+        }
+
+        function getKnowledgeTerm(categories) {
+            const terms = {
+                tech: '人工智能 (AI)',
+                finance: '宏观经济',
+                science: '科研评价体系',
+                international: '地缘政治',
+                politics: '公共政策',
+                education: '终身学习',
+                other: '信息素养'
+            };
+
+            const maxCat = Object.entries(categories)
+                .sort((a, b) => b[1].length - a[1].length)[0];
+
+            return terms[maxCat[0]] || '跨学科思维';
+        }
+
+        function generateKnowledgeExpansion(categories) {
+            const expansions = {
+                tech: {
+                    definition: '人工智能是计算机科学的一个分支，致力于创造能够执行通常需要人类智能才能完成的任务的系统。',
+                    origin: '概念最早于1956年达特茅斯会议上提出，经历了符号主义、连接主义到深度学习的演变。',
+                    reason: '当前AI爆发源于算力提升、大数据积累和算法突破的三重驱动。',
+                    trend: '未来趋势包括多模态AI、具身智能、AI for Science等方向，将深刻改变科研范式。'
+                },
+                finance: {
+                    definition: '宏观经济是研究整体经济现象的经济学分支，关注GDP、通胀、就业、利率等总量指标。',
+                    origin: '现代宏观经济学起源于凯恩斯1936年出版的《就业、利息和货币通论》。',
+                    reason: '理解宏观经济有助于科研工作者把握 funding 趋势、就业市场和投资决策。',
+                    trend: '当前全球经济面临数字化转型、绿色转型和地缘政治重构三重变革。'
+                },
+                science: {
+                    definition: '科研评价体系是衡量科研成果价值和研究者贡献的标准和方法论。',
+                    origin: '从早期的同行评议到影响因子，再到现在的多维评价指标（如h指数、Altmetric）。',
+                    reason: '科研人员需要理解评价体系以更好地规划研究方向和职业发展。',
+                    trend: '趋势是从单一论文指标向多元化、开放科学、社会影响力评价转变。'
+                },
+                international: {
+                    definition: '地缘政治是研究地理因素对国际政治和国家权力影响的学科。',
+                    origin: '概念由瑞典学者鲁道夫·契伦于1899年提出，经麦金德、斯皮克曼等学者发展。',
+                    reason: '科研合作、学术交流、资金获取都深受国际局势影响。',
+                    trend: '当前呈现多极化、区域化和科技竞争加剧的特征。'
+                },
+                politics: {
+                    definition: '公共政策是政府为解决社会问题、实现公共利益而制定的行动方案。',
+                    origin: '现代公共政策学科形成于20世纪50年代的美国，与行政学、政治学密切相关。',
+                    reason: '科研 funding、教育改革、人才政策都直接影响学者的工作环境。',
+                    trend: '政策制定越来越强调证据基础（Evidence-based Policy Making）。'
+                },
+                education: {
+                    definition: '终身学习是指个体在一生中持续进行的知识、技能和态度的学习过程。',
+                    origin: '概念由联合国教科文组织在1965年正式提出，现已成为全球教育发展的核心理念。',
+                    reason: '知识更新加速，科研人员必须保持学习才能跟上领域发展。',
+                    trend: '在线教育、微证书、能力本位教育正在重塑学习形态。'
+                },
+                other: {
+                    definition: '信息素养是指个体有效发现、评估、组织和利用信息的能力。',
+                    origin: '概念由保罗·泽考斯基于1974年提出，在信息爆炸时代愈发重要。',
+                    reason: '面对海量信息，筛选、甄别、整合信息的能力是科研工作者的核心竞争力。',
+                    trend: 'AI时代的信息素养还包括与AI协作、批判性评估AI生成内容的能力。'
+                }
+            };
+
+            const maxCat = Object.entries(categories)
+                .sort((a, b) => b[1].length - a[1].length)[0];
+
+            const exp = expansions[maxCat[0]] || expansions.other;
+
+            return `
+                <div class="knowledge-section">
+                    <h4>📖 定义</h4>
+                    <p>${exp.definition}</p>
+                </div>
+                <div class="knowledge-section">
+                    <h4>📍 出处与由来</h4>
+                    <p>${exp.origin}</p>
+                </div>
+                <div class="knowledge-section">
+                    <h4>❓ 为什么重要</h4>
+                    <p>${exp.reason}</p>
+                </div>
+                <div class="knowledge-section">
+                    <h4>🚀 发展趋势</h4>
+                    <p>${exp.trend}</p>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        // 页面加载时获取数据
+        loadBriefData();
+    </script>
+</body>
+</html>
