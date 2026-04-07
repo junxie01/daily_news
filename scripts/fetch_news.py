@@ -29,7 +29,6 @@ class NewsFetcher:
             '新华网': 'https://www.xinhuanet.com/politics/news_politics.xml',
             '澎湃新闻': 'https://www.thepaper.cn/rss',
             '36氪': 'https://36kr.com/feed',
-            '虎嗅': 'https://www.huxiu.com/rss/0.xml',
         }
         
         self.web_sources = [
@@ -54,7 +53,6 @@ class NewsFetcher:
             {'name': '一点资讯', 'url': 'https://www.yidianzixun.com', 'selector': '.title'},
             {'name': '36氪', 'url': 'https://36kr.com', 'selector': '.title'},
             {'name': '钛媒体', 'url': 'https://www.tmtpost.com', 'selector': '.title'},
-            {'name': '虎嗅', 'url': 'https://www.huxiu.com', 'selector': '.title'},
             {'name': '亿欧网', 'url': 'https://www.iyiou.com', 'selector': '.title'},
             {'name': 'PingWest', 'url': 'https://www.pingwest.com', 'selector': '.title'},
             {'name': '爱范儿', 'url': 'https://www.ifanr.com', 'selector': '.title'},
@@ -1705,6 +1703,12 @@ class NewsFetcher:
                         except:
                             pass
                     
+                    # 过滤掉无效链接
+                    invalid_domains = ['beian.miit.gov.cn', 'cyberpolice.cn', 'tiaojie.net.cn']
+                    if any(domain in href for domain in invalid_domains):
+                        print(f'Skipping invalid link: {href}')
+                        continue
+                    
                     # 尝试从详情页面提取发布时间
                     try:
                         # 访问详情页面
@@ -1929,87 +1933,7 @@ class NewsFetcher:
         except Exception as e:
             print(f'知乎 fetch error: {e}')
 
-    def fetch_xiaohongshu(self):
-        try:
-            # 小红书热门内容
-            url = 'https://www.xiaohongshu.com/explore'
-            response = self.get_with_retry(url, timeout=self.timeout)
-            if not response:
-                print(f'Failed to fetch 小红书 after {self.max_retries} attempts')
-                return
-            
-            soup = BeautifulSoup(response.text, 'lxml')
-            
-            # 查找热门笔记
-            notes = soup.select('.note-item')
-            
-            for note in notes[:30]:
-                try:
-                    title_elem = note.select_one('.title')
-                    if not title_elem:
-                        continue
-                    
-                    title = title_elem.get_text(strip=True)
-                    if not title:
-                        continue
-                    
-                    link_elem = note.select_one('a')
-                    if not link_elem:
-                        continue
-                    
-                    href = link_elem.get('href')
-                    if not href:
-                        continue
-                    
-                    url = f'https://www.xiaohongshu.com{href}'
-                    
-                    # 提取热度信息
-                    like_elem = note.select_one('.like-count')
-                    like_count = 0
-                    if like_elem:
-                        like_text = like_elem.get_text(strip=True)
-                        if like_text:
-                            try:
-                                if 'k' in like_text:
-                                    like_count = int(float(like_text.replace('k', '')) * 1000)
-                                else:
-                                    like_count = int(like_text)
-                            except:
-                                pass
-                    
-                    comment_elem = note.select_one('.comment-count')
-                    comment_count = 0
-                    if comment_elem:
-                        comment_text = comment_elem.get_text(strip=True)
-                        if comment_text:
-                            try:
-                                if 'k' in comment_text:
-                                    comment_count = int(float(comment_text.replace('k', '')) * 1000)
-                                else:
-                                    comment_count = int(comment_text)
-                            except:
-                                pass
-                    
-                    publish_time = datetime.now()
-                    
-                    news = {
-                        'id': self.get_hash(title),
-                        'title': title,
-                        'source': '小红书',
-                        'url': url,
-                        'publish_time': publish_time.isoformat(),
-                        'views': like_count * 10,  # 假设每个点赞对应10次浏览
-                        'comments': comment_count,
-                        'forwards': 0,
-                        'favorites': like_count,
-                        'recommendations': like_count * 5,
-                        'content': ''
-                    }
-                    self.news_list.append(news)
-                except Exception as e:
-                    continue
-        except Exception as e:
-            print(f'小红书 fetch error: {e}')
+
 
     def fetch_wechat(self):
         try:
@@ -2205,10 +2129,6 @@ class NewsFetcher:
         
         print('Fetching 知乎...')
         self.fetch_zhihu()
-        time.sleep(random.uniform(1, 2))
-        
-        print('Fetching 小红书...')
-        self.fetch_xiaohongshu()
         time.sleep(random.uniform(1, 2))
         
         print('Fetching 微信...')
