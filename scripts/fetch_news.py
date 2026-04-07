@@ -134,7 +134,7 @@ class NewsFetcher:
                         'comments': random.randint(10, 5000),
                         'forwards': random.randint(5, 2000),
                         'favorites': random.randint(20, 3000),
-                        'recommendations': random.randint(50, 5000),
+                        
                         'content': item.find('description') or item.find('content:encoded') or '',
                     }
                     if hasattr(news['content'], 'get_text'):
@@ -1745,7 +1745,7 @@ class NewsFetcher:
                         'comments': random.randint(10, 5000),
                         'forwards': random.randint(5, 2000),
                         'favorites': random.randint(20, 3000),
-                        'recommendations': random.randint(50, 5000),
+                        
                         'content': '',
                     }
                     self.news_list.append(news)
@@ -1796,7 +1796,7 @@ class NewsFetcher:
                             'comments': story.get('descendants', 0),
                             'forwards': 0,
                             'favorites': story.get('score', 0),
-                            'recommendations': story.get('score', 0),
+
                             'content': story.get('text', '')
                         }
                         self.news_list.append(news)
@@ -1837,7 +1837,7 @@ class NewsFetcher:
                         'comments': post_data.get('num_comments', 0),
                         'forwards': 0,
                         'favorites': post_data.get('score', 0),
-                        'recommendations': post_data.get('score', 0),
+
                         'content': post_data.get('selftext', '')
                     }
                     self.news_list.append(news)
@@ -1924,7 +1924,7 @@ class NewsFetcher:
                         'comments': target.get('answer_count', 0),
                         'forwards': 0,
                         'favorites': target.get('follower_count', 0),
-                        'recommendations': hot,
+
                         'content': target.get('excerpt', '')
                     }
                     self.news_list.append(news)
@@ -1993,7 +1993,7 @@ class NewsFetcher:
                         'comments': 0,
                         'forwards': 0,
                         'favorites': read_count // 10,  # 假设每10次阅读对应1个收藏
-                        'recommendations': read_count // 5,  # 假设每5次阅读对应1个推荐
+
                         'content': ''
                     }
                     self.news_list.append(news)
@@ -2013,7 +2013,7 @@ class NewsFetcher:
                 'comments': 2340,
                 'forwards': 5600,
                 'favorites': 8900,
-                'recommendations': 12000,
+
                 'content': '据可靠消息，OpenAI将于下周发布GPT-5大模型，新模型在推理能力、多模态理解等方面有显著提升...'
             },
             {
@@ -2025,7 +2025,7 @@ class NewsFetcher:
                 'comments': 4500,
                 'forwards': 8900,
                 'favorites': 15000,
-                'recommendations': 20000,
+
                 'content': '苹果今日正式发布Vision Pro 2，售价从3499美元降至2499美元，同时重量减轻25%...'
             },
             {
@@ -2037,7 +2037,7 @@ class NewsFetcher:
                 'comments': 5600,
                 'forwards': 12000,
                 'favorites': 18000,
-                'recommendations': 22000,
+
                 'content': '特斯拉股价今日暴跌20%，创下2020年以来最大单日跌幅，主要受销量下滑和竞争加剧影响...'
             },
             {
@@ -2049,7 +2049,7 @@ class NewsFetcher:
                 'comments': 8900,
                 'forwards': 25000,
                 'favorites': 35000,
-                'recommendations': 45000,
+
                 'content': '上海微电子宣布，首台国产14nm光刻机已通过验收并实现量产，标志着中国芯片产业迈出关键一步...'
             },
             {
@@ -2061,7 +2061,7 @@ class NewsFetcher:
                 'comments': 15000,
                 'forwards': 45000,
                 'favorites': 55000,
-                'recommendations': 70000,
+
                 'content': '在2026年世界杯预选赛亚洲区比赛中，国足主场2-0战胜韩国队，取得关键三分...'
             },
             {
@@ -2073,7 +2073,7 @@ class NewsFetcher:
                 'comments': 3400,
                 'forwards': 7800,
                 'favorites': 12000,
-                'recommendations': 16000,
+
                 'content': '科学家研发出新型固态电池，充电10分钟即可续航1000公里，预计2028年实现商业化...'
             },
             {
@@ -2085,7 +2085,7 @@ class NewsFetcher:
                 'comments': 6700,
                 'forwards': 15000,
                 'favorites': 22000,
-                'recommendations': 28000,
+
                 'content': '美联储宣布将联邦基金利率下调25个基点，这是今年以来第三次降息...'
             },
             {
@@ -2097,7 +2097,7 @@ class NewsFetcher:
                 'comments': 5200,
                 'forwards': 12000,
                 'favorites': 19000,
-                'recommendations': 25000,
+
                 'content': 'Netflix《三体》第二季今日上线，首日全球观看量突破1亿次，口碑爆棚...'
             }
         ]
@@ -2148,7 +2148,6 @@ class NewsFetcher:
                 existing['comments'] += news['comments']
                 existing['forwards'] += news['forwards']
                 existing['favorites'] += news['favorites']
-                existing['recommendations'] += news['recommendations']
                 
                 if news['publish_time'] < existing['publish_time']:
                     existing['publish_time'] = news['publish_time']
@@ -2163,7 +2162,7 @@ class NewsFetcher:
         
         n = len(news_list)
         
-        dimensions = ['views', 'comments', 'forwards', 'favorites', 'recommendations']
+        dimensions = ['views', 'comments', 'forwards', 'favorites']
         
         for dim in dimensions:
             sorted_news = sorted(news_list, key=lambda x: x[dim], reverse=True)
