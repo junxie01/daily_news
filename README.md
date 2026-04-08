@@ -1,14 +1,21 @@
-# 热点资讯
+# 热点资讯 + AI 新闻简报
 
-一个自动抓取和展示24小时热门资讯的网页应用。
+一个自动抓取24小时热门资讯，并使用 AI 生成个性化新闻简报的网页应用。
+
+**在线访问**: https://www.seis-jun.xyz/daily_news/
 
 ## 功能特性
 
-1. **多平台资讯抓取：从Hacker News、Reddit等平台抓取24小时内的热门资讯
-2. **智能去重聚合：自动识别重复资讯，保留最早来源并聚合所有平台数据
-3. **多维度热度评分：基于浏览量、评论数、转发量、收藏数、推荐次数计算综合热度
-4. **交互式展示：支持按不同维度排序，查看前20或后20条资讯
-5. **自动化更新：通过GitHub Actions每天自动更新数据
+1. **多源资讯抓取**：从新浪新闻、36氪、第一财经等40+国内外媒体抓取热门资讯
+2. **智能去重聚合**：自动识别重复资讯，保留最早来源并聚合多平台数据
+3. **多维度热度评分**：基于浏览量、评论数、转发量、收藏数计算综合热度
+4. **交互式展示**：支持按热度/浏览量/评论数/转发量/收藏数排序，查看热门/冷门资讯
+5. **AI 新闻简报**：专为科研学者定制的 AI 深度分析，包含：
+   - 今日值得关注的新闻及趋势洞察
+   - 科研 funding 动态、学术机会、投资洞察
+   - 个性化学习路径和行动建议
+   - 相关知识扩展（定义、由来、趋势）
+6. **自动化更新**：GitHub Actions 每天自动抓取新闻并生成 AI 简报
 
 ## 快速开始
 
@@ -20,60 +27,79 @@
 pip install -r requirements.txt
 ```
 
-3. 运行爬虫：
+3. 配置环境变量（可选，用于 AI 简报）：
+```bash
+# 复制 .env.example 为 .env 并填写你的 API 密钥
+cp .env.example .env
+# 编辑 .env 文件，添加你的 Qwen/DeepSeek/OpenAI API 密钥
+```
+
+4. 运行爬虫：
 ```bash
 python scripts/fetch_news.py
 ```
 
-4. 打开 `index.html` 在浏览器中查看
+5. 生成 AI 简报（需要配置 API 密钥）：
+```bash
+python scripts/generate_brief.py
+```
+
+6. 打开 `index.html` 在浏览器中查看
 
 ### 部署到GitHub Pages
 
 1. 在GitHub上创建仓库
 2. 推送代码
-3. 启用GitHub Pages（Settings → Pages → Source选择 `gh-pages` 分支或 `main` 分支的 `/` 目录
-4. 配置GitHub Secrets（如果需要）
+3. 启用GitHub Pages（Settings → Pages → Source 选择 GitHub Actions）
+4. 配置GitHub Secrets（用于 AI 简报）：
+   - `QWEN_API_KEY`：你的通义千问 API 密钥
+   - （可选）`DEFAULT_AI_PROVIDER`：默认 AI 提供商（qwen/deepseek/openai）
 
 ## GitHub Actions 自动更新
 
 工作流已配置为每天 UTC 23:00（北京时间早上 07:00）自动运行：
 
-- 抓取最新资讯
-- 计算热度评分
-- 更新网页数据
-- 自动提交并推送
+- 抓取最新资讯（从 40+ 新闻源）
+- 计算热度评分并去重
+- 调用 AI 生成个性化新闻简报
+- 自动提交并部署到网站
 
-也可以手动触发工作流
+也可以手动触发工作流（Actions → Update Hot News and Deploy → Run workflow）
 
 ## 项目结构
 
 ```
-news/
+daily_news/
 ├── .github/
 │   └── workflows/
-│       └── update-news.yml    # GitHub Actions配置
+│       └── update-news.yml     # GitHub Actions 配置
 ├── scripts/
-│   └── fetch_news.py           # 爬虫脚本
+│   ├── fetch_news.py           # 新闻爬虫脚本
+│   └── generate_brief.py       # AI 简报生成脚本
 ├── data/                       # 数据目录
-│   └── news.json             # 资讯数据
-├── index.html                   # 主网页
-├── requirements.txt             # Python依赖
-└── README.md               # 说明文档
+│   ├── news.json               # 新闻数据
+│   └── brief.json              # AI 生成的简报
+├── index.html                  # 热点资讯主页
+├── brief.html                  # AI 新闻简报页面
+├── .env                        # 环境变量（本地使用，不提交）
+├── requirements.txt            # Python 依赖
+└── README.md                   # 说明文档
 ```
 
 ## 集成到现有网站
 
-将以下方式将热点资讯集成到您的网站 https://www.seis-jun.xyz/：
+本项目已部署到 https://www.seis-jun.xyz/daily_news/
 
 ### 方式1：独立页面（推荐）
-1. 将整个项目推送到GitHub仓库
-2. 在您的网站添加链接指向该GitHub Pages地址
-3. 或使用iframe嵌入
+1. Fork 本仓库
+2. 配置 GitHub Secrets（QWEN_API_KEY）
+3. 启用 GitHub Pages
+4. 在您的网站添加链接指向该地址
 
 ### 方式2：子目录集成
-1. 在您的网站仓库中创建 `hot-news/` 子目录
+1. 在您的网站仓库中创建 `daily_news/` 子目录
 2. 将项目文件复制到该目录
-3. 修改GitHub Actions配置以适应新路径
+3. 修改 GitHub Actions 配置以适应新路径
 
 ## 扩展爬虫
 
@@ -145,7 +171,26 @@ news/
 
 ## 自定义
 
-要添加更多资讯源，编辑 `scripts/fetch_news.py` 中的 `fetch_*` 方法。
+### 添加新闻源
+
+编辑 `scripts/fetch_news.py`，在 `web_sources` 列表中添加新的新闻源：
+
+```python
+web_sources = [
+    {'name': '新来源名称', 'url': 'https://example.com', 'selector': '.title'},
+    # ... 其他来源
+]
+```
+
+### 切换 AI 提供商
+
+支持以下 AI 提供商：
+- **通义千问 (Qwen)**：推荐，国内访问稳定（默认）
+- **DeepSeek**：性价比高
+- **OpenAI**：GPT-4o-mini 等模型
+- **Moonshot (Kimi)**：国内大模型
+
+修改 `.env` 文件或 GitHub Secrets 中的 `DEFAULT_AI_PROVIDER` 切换提供商。
 
 ## 许可证
 
