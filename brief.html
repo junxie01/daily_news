@@ -409,9 +409,8 @@
 
         function renderAIBrief(briefData) {
             const meta = briefData.meta || {};
-            document.getElementById('updateTime').innerHTML =
-                `简报生成时间: ${new Date(meta.generated_at || Date.now()).toLocaleString('zh-CN')}` +
-                `<br><small style="opacity: 0.8;">由 ${meta.ai_provider || 'AI'} 生成 · 基于 ${meta.news_count || 0} 条新闻</small>`;
+            document.getElementById('updateTime').textContent =
+                `简报生成时间: ${new Date(meta.generated_at || Date.now()).toLocaleString('zh-CN')}`;
 
             const s1 = briefData.section1;
             const s2 = briefData.section2;
