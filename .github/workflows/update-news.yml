@@ -55,9 +55,6 @@ jobs:
         sudo warp-cli --accept-tos registration new
         # Connect to WARP
         sudo warp-cli --accept-tos connect
-        # Enable local proxy mode on port 8080
-        sudo warp-cli --accept-tos set-mode proxy
-        sudo warp-cli --accept-tos set-proxy-port 8080
         # Wait for connection
         sleep 10
         # Verify connection
@@ -67,9 +64,6 @@ jobs:
         curl -s -o /dev/null -w "%{http_code}" https://www.cnn.com || echo "CNN access failed"
 
     - name: Fetch and process news
-      env:
-        HTTP_PROXY: http://127.0.0.1:8080
-        HTTPS_PROXY: http://127.0.0.1:8080
       run: |
         python scripts/fetch_news.py
 

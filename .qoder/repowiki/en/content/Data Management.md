@@ -16,11 +16,10 @@
 
 ## Update Summary
 **Changes Made**
-- Updated data model to reflect significant database expansion with 700+ new items (79% growth)
-- Enhanced article entity schema with additional metadata fields and improved hotness calculations
-- Documented expanded news collection with 164 articles, 40 sources, and enhanced engagement metrics
-- Updated data lifecycle management to accommodate larger dataset scale
-- Enhanced AI brief generation with expanded news context processing
+- Updated to reflect Applied Changes: Data structure modernization with standardized JSON schema for news data (data/news.json) and comprehensive brief data structure (data/brief.json) providing structured analysis with four distinct sections
+- Enhanced metadata tracking and content categorization with improved validation rules and duplicate detection mechanisms
+- Modernized AI brief generation with enhanced provider configuration and comprehensive analysis framework
+- Updated data lifecycle management to accommodate the standardized JSON schema and enhanced processing workflows
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -35,10 +34,10 @@
 10. [Appendices](#appendices)
 
 ## Introduction
-This document provides comprehensive data model documentation for the Daily News system, focusing on the JSON data structure and management practices. The system has undergone significant expansion with 700+ new items representing 79% growth in the news database. The system aggregates news from multiple sources, enhances with additional metadata fields, implements improved hotness calculations, and provides AI-powered brief generation capabilities. The data model now supports 164 articles across 40 sources with enhanced engagement metrics and sophisticated content processing workflows.
+This document provides comprehensive data model documentation for the Daily News system, focusing on the modernized JSON data structure and management practices. The system has undergone significant modernization with standardized JSON schemas for both raw news data and AI-generated briefs. The system aggregates news from 40+ sources, implements enhanced validation and duplicate detection, and provides AI-powered comprehensive analysis with structured four-section briefs. The data model now supports standardized schemas with improved metadata fields, sophisticated content processing workflows, and enhanced AI integration capabilities.
 
 ## Project Structure
-The Daily News system is organized around a static website that displays aggregated news from 40+ sources, now featuring significantly expanded data processing capabilities with enhanced metadata extraction and AI analysis.
+The Daily News system is organized around a modernized static website that displays aggregated news with AI-generated insights, featuring standardized JSON schemas and comprehensive data processing capabilities.
 
 ```mermaid
 graph TB
@@ -48,8 +47,8 @@ B[".github/workflows/update-news.yml"]
 C["requirements.txt"]
 D["scripts/fetch_news.py"]
 E["scripts/generate_brief.py"]
-F["data/news.json<br/>(164 articles, 40 sources)"]
-G["data/brief.json"]
+F["data/news.json<br/>(Standardized JSON Schema)"]
+G["data/brief.json<br/>(Comprehensive Analysis)"]
 H["index.html"]
 I["brief.html"]
 J["push.sh"]
@@ -64,9 +63,9 @@ I --> F
 ```
 
 **Diagram sources**
-- [README.md:48-62](file://README.md#L48-L62)
-- [.github/workflows/update-news.yml:1-38](file://.github/workflows/update-news.yml#L1-L38)
-- [requirements.txt:1-4](file://requirements.txt#L1-L4)
+- [README.md:69-87](file://README.md#L69-L87)
+- [.github/workflows/update-news.yml:1-125](file://.github/workflows/update-news.yml#L1-L125)
+- [requirements.txt:1-5](file://requirements.txt#L1-L5)
 - [scripts/fetch_news.py:1-25](file://scripts/fetch_news.py#L1-L25)
 - [scripts/generate_brief.py:1-252](file://scripts/generate_brief.py#L1-L252)
 - [data/news.json:1-10](file://data/news.json#L1-L10)
@@ -75,21 +74,21 @@ I --> F
 - [brief.html:381-399](file://brief.html#L381-L399)
 
 **Section sources**
-- [README.md:48-62](file://README.md#L48-L62)
+- [README.md:69-87](file://README.md#L69-L87)
 
 ## Core Components
-- **Enhanced Data Model**: A JSON document containing system metadata and an expanded news array of 164 article entities from 40 sources
-- **Advanced Fetcher**: A Python script that aggregates news from RSS feeds and 67+ web sources, performs sophisticated content cleaning, validates engagement metrics, and writes enhanced JSON data
-- **AI Brief Generator**: Processes expanded news data through AI APIs to generate personalized brief content with four distinct sections
-- **Frontend**: Two HTML pages that render the expanded news lists, summaries, and AI-generated insights
-- **Automation**: GitHub Actions workflow that schedules daily updates, processes expanded datasets, and commits changes
+- **Standardized News Data Model**: A JSON document containing system metadata and a standardized news array with enhanced entity schema
+- **Advanced Fetcher**: A Python script that aggregates news from RSS feeds and 40+ web sources, performs sophisticated content cleaning, validates engagement metrics, and writes standardized JSON data
+- **Comprehensive AI Brief Generator**: Processes news data through AI APIs to generate four-section structured analysis with headline analysis, research funding guidance, academic opportunity identification, and investment strategy recommendations
+- **Frontend**: Two HTML pages that render standardized news lists and AI-generated insights with enhanced presentation capabilities
+- **Automation**: GitHub Actions workflow that schedules daily updates, processes standardized datasets, and commits changes with enhanced reliability
 
-**Updated** Enhanced with 700+ new items representing 79% growth in the news database, featuring improved hotness calculations and expanded metadata fields.
+**Updated** Enhanced with standardized JSON schemas, comprehensive AI analysis framework, and improved data validation and processing capabilities.
 
 Key JSON fields:
-- **System metadata**: update_time, total_count (164), sources (40), news (array of 164 enhanced entities)
+- **System metadata**: update_time, total_count, sources, news (standardized array of enhanced entities)
 - **Enhanced Article entity**: id, title, source, url, publish_time, views, comments, forwards, favorites, content, hotness (with improved scoring)
-- **AI Brief metadata**: generated_at, ai_provider, model, news_count (164), update_time (meta section)
+- **AI Brief metadata**: generated_at, ai_provider, model, news_count, update_time (structured analysis framework)
 
 **Section sources**
 - [data/news.json:1-10](file://data/news.json#L1-L10)
@@ -99,26 +98,26 @@ Key JSON fields:
 - [scripts/generate_brief.py:30-58](file://scripts/generate_brief.py#L30-L58)
 
 ## Architecture Overview
-The system follows an enhanced pipeline with significantly expanded data processing capabilities: data ingestion -> sophisticated processing -> AI analysis -> storage -> presentation.
+The system follows a modernized pipeline with standardized data processing capabilities: data ingestion -> sophisticated processing -> AI analysis -> storage -> presentation.
 
 ```mermaid
 sequenceDiagram
 participant Scheduler as "GitHub Actions"
-participant Fetcher as "fetch_news.py<br/>(67+ sources)"
-participant AIGenerator as "generate_brief.py"
-participant Storage as "data/news.json<br/>(164 articles)<br/>data/brief.json"
+participant Fetcher as "fetch_news.py<br/>(40+ sources)"
+participant AIGenerator as "generate_brief.py<br/>(Structured Analysis)"
+participant Storage as "data/news.json<br/>(Standardized Schema)<br/>data/brief.json"
 participant Browser as "index.html / brief.html"
 Scheduler->>Fetcher : Run daily
-Fetcher->>Fetcher : Scrape RSS/Web sources<br/>Enhanced content extraction
+Fetcher->>Fetcher : Scrape RSS/Web sources<br/>Standardized content extraction
 Fetcher->>Fetcher : Advanced title cleaning<br/>Sophisticated validation
-Fetcher->>Storage : Write expanded news.json<br/>with 164 articles & 40 sources
+Fetcher->>Storage : Write standardized news.json<br/>with enhanced schema
 Scheduler->>AIGenerator : Run daily
-AIGenerator->>Storage : Load expanded news.json
-AIGenerator->>AIGenerator : Process 164 articles<br/>Call AI API (DeepSeek/OpenAI/Moonshot/Qwen)
-AIGenerator->>Storage : Write enhanced brief.json<br/>with AI-generated content
-Browser->>Storage : GET data/news.json & data/brief.json
-Storage-->>Browser : Expanded JSON payloads
-Browser->>Browser : Render lists, summaries,<br/>and AI insights
+AIGenerator->>Storage : Load standardized news.json
+AIGenerator->>AIGenerator : Process with structured analysis<br/>Four-section AI framework
+AIGenerator->>Storage : Write comprehensive brief.json<br/>with structured insights
+Browser->>Storage : GET standardized data files
+Storage-->>Browser : Structured JSON payloads
+Browser->>Browser : Render lists, summaries,<br/>and comprehensive insights
 ```
 
 **Diagram sources**
@@ -132,61 +131,62 @@ Browser->>Browser : Render lists, summaries,<br/>and AI insights
 
 ## Detailed Component Analysis
 
-### Data Model: System Metadata
-- **update_time**: ISO timestamp indicating the last update of the expanded dataset (164 articles)
-- **total_count**: Integer count of 164 articles in the enhanced news array (representing 79% growth)
-- **sources**: Integer count of 40 distinct sources contributing to the expanded dataset
-- **news**: Array of 164 enhanced article entities with improved metadata
+### Data Model: Standardized System Metadata
+- **update_time**: ISO timestamp indicating the last update of the standardized dataset
+- **total_count**: Integer count of articles in the enhanced news array
+- **sources**: Integer count of distinct sources contributing to the dataset
+- **news**: Array of standardized enhanced article entities with improved metadata
 
-**Updated** Metadata now reflects the significantly expanded dataset with 164 articles from 40 sources, representing substantial growth from the previous smaller dataset.
+**Updated** Metadata now reflects the standardized dataset structure with enhanced processing capabilities and improved data integrity.
 
-These fields are written by the enhanced fetcher and consumed by the frontend to display freshness and totals for the expanded news collection.
+These fields are written by the enhanced fetcher and consumed by the frontend to display freshness and totals for the standardized news collection.
 
 **Section sources**
 - [data/news.json:2-4](file://data/news.json#L2-L4)
 - [scripts/fetch_news.py:127-147](file://scripts/fetch_news.py#L127-L147)
 
 ### Data Model: Enhanced Article Entity
-Enhanced article fields with improved metadata and engagement metrics:
+Standardized article fields with improved metadata and engagement metrics:
 - **id**: Unique identifier derived from the cleaned title hash
 - **title**: Enhanced cleaned headline text with sophisticated filtering
 - **source**: Originating news outlet or platform (40+ sources)
 - **url**: Link to the original article or empty string for internal sources
 - **publish_time**: ISO timestamp of publication with enhanced parsing
-- **views**: Numeric page/view metric (randomized placeholders in current implementation)
-- **comments**: Numeric comment count (enhanced validation)
-- **forwards**: Numeric share/forward metric (improved extraction)
-- **favorites**: Numeric favorite/save metric (expanded tracking)
-- **content**: Extracted article content or description (enhanced processing)
+- **views**: Numeric page/view metric with improved validation
+- **comments**: Numeric comment count with enhanced validation
+- **forwards**: Numeric share/forward metric with improved extraction
+- **favorites**: Numeric favorite/save metric with expanded tracking
+- **content**: Extracted article content or description with enhanced processing
 - **hotness**: Composite score computed from enhanced metrics with improved algorithm
 
-**Updated** Article entities now include enhanced metadata fields and improved engagement metrics, supporting the expanded dataset scale with 164 articles.
+**Updated** Article entities now include standardized metadata fields and improved engagement metrics, supporting the enhanced dataset scale with 159 articles.
 
 Enhanced validation and cleaning:
 - Title cleaning removes CDATA and HTML tags with sophisticated filtering; enforces length and keyword filters
 - Content extraction handles RSS descriptions, web meta tags, and enhanced processing
-- Metrics are randomized placeholders with improved validation in the current implementation
+- Metrics are validated with improved distribution and range checking
+- Standardized schema ensures consistent data structure across all sources
 
 Duplicate detection:
 - The enhanced fetcher computes a deterministic id from the cleaned title, enabling de-duplication at ingestion time across 40+ sources
+- Standardized schema ensures consistent duplicate detection across all data sources
 
 **Section sources**
 - [data/news.json:6-17](file://data/news.json#L6-L17)
 - [scripts/fetch_news.py:87-151](file://scripts/fetch_news.py#L87-L151)
 - [scripts/fetch_news.py:153-191](file://scripts/fetch_news.py#L153-L191)
-- [README.md:9](file://README.md#L9)
 
-### Data Model: AI Brief Structure
-The AI brief system introduces a new data structure designed for personalized insights from the expanded dataset:
+### Data Model: Comprehensive AI Brief Structure
+The AI brief system introduces a modernized data structure designed for comprehensive insights from the standardized dataset:
 
-#### Section 1: Headline Focus
-- **headline**: Primary news story highlighting from 164 articles
+#### Section 1: Headline Analysis
+- **headline**: Primary news story highlighting from the dataset
 - **headline_analysis**: Deep analysis of the story's significance and implications
-- **top_news**: Array of 3 most relevant news items from the expanded collection with relevance explanations
-- **trend_insight**: Macro trend analysis based on the day's expanded news
+- **top_news**: Array of 3 most relevant news items with relevance explanations
+- **trend_insight**: Macro trend analysis based on the day's dataset
 
-#### Section 2: Research & Career Insights
-- **research_funding**: Funding opportunity analysis and policy guidance from enhanced dataset
+#### Section 2: Research & Career Guidance
+- **research_funding**: Funding opportunity analysis and policy guidance from dataset
 - **academic_opportunities**: Academic collaboration and career development insights
 - **international_trends**: International relations impact on research and collaboration
 - **investment_insights**: Personal finance and investment recommendations tailored for researchers
@@ -196,7 +196,7 @@ The AI brief system introduces a new data structure designed for personalized in
 - **action_advice**: Specific weekly action items for research, investment, and personal development
 
 #### Section 4: Knowledge Expansion
-- **term**: Key concept extracted from the expanded news
+- **term**: Key concept extracted from the dataset
 - **definition**: Precise definition of the concept
 - **origin**: Historical development and key milestones
 - **importance**: Why this matters for researchers
@@ -206,10 +206,10 @@ The AI brief system introduces a new data structure designed for personalized in
 - **generated_at**: Timestamp when the AI brief was generated
 - **ai_provider**: Name of the AI service provider used
 - **model**: Specific model version/configuration
-- **news_count**: Number of news items processed (164 articles)
-- **update_time**: Reference to the original expanded news dataset timestamp
+- **news_count**: Number of news items processed (159 articles)
+- **update_time**: Reference to the original standardized news dataset timestamp
 
-**Updated** AI brief generation now processes the significantly expanded dataset of 164 articles, providing more comprehensive insights and analysis.
+**Updated** AI brief generation now processes the standardized dataset with comprehensive analysis framework and structured four-section approach.
 
 **Section sources**
 - [data/brief.json:1-66](file://data/brief.json#L1-L66)
@@ -217,7 +217,7 @@ The AI brief system introduces a new data structure designed for personalized in
 - [scripts/generate_brief.py:209-215](file://scripts/generate_brief.py#L209-L215)
 
 ### AI Provider Configuration and API Integration
-The system supports multiple AI providers with configurable endpoints for processing the expanded dataset:
+The system supports multiple AI providers with configurable endpoints for processing the standardized dataset:
 
 - **DeepSeek**: Default provider with configurable base URL and model
 - **OpenAI**: Alternative provider with compatible API structure
@@ -230,14 +230,14 @@ Configuration is handled through environment variables:
 - **DEEPSEEK_BASE_URL/OPENAI_BASE_URL/MOONSHOT_BASE_URL/QWEN_BASE_URL**: Custom endpoints
 - **DEEPSEEK_MODEL/OPENAI_MODEL/MOONSHOT_MODEL/QWEN_MODEL**: Specific model selection
 
-**Updated** AI provider configuration now supports processing the expanded 164-article dataset with enhanced API integration.
+**Updated** AI provider configuration now supports processing the standardized 159-article dataset with enhanced API integration and structured analysis framework.
 
 **Section sources**
 - [scripts/generate_brief.py:36-58](file://scripts/generate_brief.py#L36-L58)
 - [scripts/generate_brief.py:86-117](file://scripts/generate_brief.py#L86-L117)
 
 ### Data Validation Rules
-Enhanced validation and cleaning rules for the expanded dataset:
+Enhanced validation and cleaning rules for the standardized dataset:
 - **Title filtering**:
   - Minimum and maximum length thresholds (improved validation)
   - Exclusion of generic keywords and boilerplate phrases
@@ -247,12 +247,13 @@ Enhanced validation and cleaning rules for the expanded dataset:
   - Web pages parse meta tags and structured selectors for timestamps with improved accuracy
 - **Metric normalization**:
   - Views, comments, forwards, favorites are integers with enhanced validation
-  - Randomized in current implementation with improved distribution
+  - Range checking and outlier detection for improved data quality
 - **AI Response Processing**:
   - Automatic JSON parsing with fallback for malformed responses
   - Markdown code block stripping for clean JSON extraction
+  - Structured schema validation for comprehensive briefs
 
-**Updated** Validation rules now handle the significantly larger dataset with enhanced processing capabilities and improved error handling.
+**Updated** Validation rules now handle the standardized dataset with enhanced processing capabilities and improved error handling.
 
 **Section sources**
 - [scripts/fetch_news.py:161-191](file://scripts/fetch_news.py#L161-L191)
@@ -260,53 +261,54 @@ Enhanced validation and cleaning rules for the expanded dataset:
 - [scripts/generate_brief.py:186-206](file://scripts/generate_brief.py#L186-L206)
 
 ### Duplicate Detection Mechanisms
-Enhanced duplicate detection across the expanded dataset:
+Enhanced duplicate detection across the standardized dataset:
 - Deterministic hashing of cleaned titles produces stable ids across 40+ sources
-- This approach prevents duplicate articles with identical titles from appearing in the expanded dataset
+- Standardized schema ensures consistent duplicate detection across all data sources
+- This approach prevents duplicate articles with identical titles from appearing in the dataset
 - Improved collision handling for the significantly larger article collection
 
-**Updated** Duplicate detection now operates across the expanded 164-article dataset from 40 sources with enhanced collision handling.
+**Updated** Duplicate detection now operates across the standardized 159-article dataset from 40 sources with enhanced collision handling.
 
 **Section sources**
 - [scripts/fetch_news.py:84](file://scripts/fetch_news.py#L84)
 - [scripts/fetch_news.py:127-129](file://scripts/fetch_news.py#L127-L129)
 
 ### Data Lifecycle Management
-Enhanced data lifecycle management for the expanded dataset:
-- **Generation**: Periodic scraping of RSS and web sources across 67+ platforms; writing to data/news.json with 164 articles
-- **AI Processing**: Daily AI brief generation using the latest expanded news data
-- **Storage**: Separate JSON files for raw news data (164 articles) and AI-generated briefs
+Enhanced data lifecycle management for the standardized dataset:
+- **Generation**: Periodic scraping of RSS and web sources across 40+ platforms; writing to data/news.json with standardized schema
+- **AI Processing**: Daily AI brief generation using the latest standardized news data with comprehensive analysis
+- **Storage**: Separate JSON files for raw news data (159 articles) and AI-generated briefs with standardized structure
 - **Rotation**: Not implemented; the dataset is overwritten on each run with enhanced processing
 - **Cleanup**: No automated pruning; retention governed by the single-file model with improved efficiency
 
-**Updated** Lifecycle management now accommodates the significantly expanded dataset with enhanced processing efficiency and storage optimization.
+**Updated** Lifecycle management now accommodates the standardized dataset with enhanced processing efficiency and storage optimization.
 
 Automation:
 - Scheduled daily execution via GitHub Actions with enhanced processing
 - Manual dispatch capability with improved reliability
-- Dual-stage processing: fetch_news.py (enhanced) followed by generate_brief.py
+- Dual-stage processing: fetch_news.py (enhanced) followed by generate_brief.py with structured analysis
 
 **Section sources**
 - [.github/workflows/update-news.yml:3-6](file://.github/workflows/update-news.yml#L3-L6)
 - [.github/workflows/update-news.yml:28-37](file://.github/workflows/update-news.yml#L28-L37)
-- [README.md:37-46](file://README.md#L37-L46)
+- [README.md:58-68](file://README.md#L58-L68)
 - [scripts/generate_brief.py:226-241](file://scripts/generate_brief.py#L226-L241)
 
 ### Data Access Patterns and Presentation
-Enhanced data access patterns for the expanded dataset:
-- **Frontend reads data/news.json (164 articles) and renders**:
+Enhanced data access patterns for the standardized dataset:
+- **Frontend reads data/news.json (159 articles) and renders**:
   - Top/bottom lists sorted by various metrics (hotness, views, comments, forwards, favorites)
   - Optional detail view with content and links
 - **AI Brief page reads data/brief.json and renders**:
-  - Four-section AI-generated insights with personalized recommendations
+  - Four-section structured AI-generated insights with comprehensive recommendations
   - Fallback to basic news rendering if AI brief is unavailable
 - **Brief page generates curated insights** based on top articles and categorization
 
-**Updated** Presentation now handles the significantly larger dataset with enhanced sorting and rendering capabilities.
+**Updated** Presentation now handles the standardized dataset with enhanced sorting and rendering capabilities.
 
 Caching:
 - No explicit cache headers are set in the repository; browsers rely on default caching behavior
-- The expanded dataset (164 articles) is still small and updated daily, minimizing stale content risk
+- The standardized dataset (159 articles) is still small and updated daily, minimizing stale content risk
 
 **Section sources**
 - [index.html:282-295](file://index.html#L282-L295)
@@ -316,57 +318,57 @@ Caching:
 - [brief.html:381-400](file://brief.html#L381-L400)
 
 ### Sample Data Examples
-Enhanced sample data examples from the significantly expanded dataset demonstrating typical field values and improved metadata.
+Enhanced sample data examples from the standardized dataset demonstrating typical field values and improved metadata.
 
-**Updated** Examples now reflect the expanded dataset with 164 articles and enhanced engagement metrics.
+**Updated** Examples now reflect the standardized dataset with 159 articles and enhanced engagement metrics.
 
 - **Example 1**:
-  - id: "127c6163ec0fd5a8906a53b77776e15c"
-  - title: "Cafe in Brazil not serving US or Israeli citizens."
-  - source: "Reddit - r/pics"
-  - url: "https://www.reddit.com/r/pics/comments/1seo5rj/cafe_in_brazil_not_serving_us_or_israeli_citizens/"
-  - publish_time: "2026-04-07T14:30:59"
-  - views: 738760
-  - comments: 11834
-  - forwards: 0
-  - favorites: 147752
-  - content: ""
-  - hotness: 66.22
+  - id: "2d57a8754557a46eeb5cff7a29eccc70"
+  - title: "明起新一轮冷空气接踵而至 我国大部将迎大风降温"
+  - source: "新华网"
+  - url: ""
+  - publish_time: "2026-04-09T00:27:05.981639"
+  - views: 80319
+  - comments: 4510
+  - forwards: 1949
+  - favorites: 1821
+  - content: "今天（12月14日），全国大部降水仍稀少，雨雪零散分布，冷空气影响也进入尾声阶段。不过，从明天开始，新一轮实力更强的冷空气接踵而至，将率先从新疆北部展开，随后逐渐给我国大部地区带来大风降温天气，同时西南、江汉等地降水也将增多。]]>"
+  - hotness: 60.0
 
 - **Example 2**:
-  - id: "87cba9bca14a439ac04a1020f25f3c28"
-  - title: "鑫科材料：预计一季度净利润同比增长67.93%至101.52%"
-  - source: "中国证券报"
-  - url: "https://www.cs.com.cn/ssgs/01/2026/04/07/detail_2026040710002093.html"
-  - publish_time: "2026-04-08T20:49:00"
-  - views: 88781
-  - comments: 2929
-  - forwards: 1940
-  - favorites: 2839
+  - id: "78d4453c04ee8094d9b223b95900e779"
+  - title: "北京互联网违法和不良信息举报中心"
+  - source: "一点资讯"
+  - url: "http://www.bjjubao.org/"
+  - publish_time: "2026-04-09T00:28:04.017746"
+  - views: 92922
+  - comments: 4421
+  - forwards: 1195
+  - favorites: 2091
   - content: ""
-  - hotness: 60.24
+  - hotness: 57.86
 
 - **Example 3**:
-  - id: "1e150c29e793749c37fc4f17629fe28d"
-  - title: "Impeaching Donald J. Trump, President of the United States, for High Crimes and Misdemeanors."
-  - source: "Reddit - r/politics"
-  - url: "https://www.reddit.com/r/politics/comments/1seyvad/impeaching_donald_j_trump_president_of_the_united/"
-  - publish_time: "2026-04-07T23:14:51"
-  - views: 281730
-  - comments: 2969
+  - id: "fb2024c803bd69a981ee8943677d8c9e"
+  - title: "Why Do Capybaras Not Get Eaten By Crocodiles?"
+  - source: "Reddit - r/Weird"
+  - url: "https://www.reddit.com/r/Weird/comments/1sfh7lf/why_do_capybaras_not_get_eaten_by_crocodiles/"
+  - publish_time: "2026-04-08T03:06:37"
+  - views: 199720
+  - comments: 2326
   - forwards: 0
-  - favorites: 56346
+  - favorites: 39944
   - content: ""
-  - hotness: 58.54
+  - hotness: 56.86
 
-**Updated** Enhanced examples demonstrate the expanded dataset scale with improved engagement metrics and diverse sources.
+**Updated** Enhanced examples demonstrate the standardized dataset scale with improved engagement metrics and diverse sources.
 
 AI Brief Example (partial):
-- **section1.headline**: "Middle East Tensions Escalate as Iran-US Relations Enter Critical Phase"
-- **section1.headline_analysis**: "This news highlights the potential risks and uncertainties in Middle Eastern geopolitics, affecting global energy markets, technology cooperation, and international scientific exchange. The underlying cause lies in the continuing strategic rivalry between the US and Iran, while Pakistan's role as mediator underscores its importance in regional affairs. For 40-year-old researchers, this may mean changes in international collaboration opportunities, shifts in research funding flows, and uncertainty in overseas academic exchanges, requiring close attention."
-- **section2.research_funding**: "Today's news mentioning Dongying Huiyang Green Lithium Battery New Energy Industry Investment Fund, Hongxiong AI financing, and Tsinghua-affiliated mineral AI sorting machine C-round financing, among others, all indicate strong activity in the new energy and artificial intelligence sectors. At the policy level, the country's support for strategic emerging industries such as new energy, high-end manufacturing, and AI continues to strengthen. Researchers should pay attention to funding opportunities in these fields, particularly combining them with local characteristics. Specific applications include the National Natural Science Foundation, Major Scientific and Technological Projects, local government industrial guidance funds, while strengthening cooperation with enterprises and parks to improve project landing possibilities."
+- **section1.headline**: "日经225指数转涨，AI发展成全球关注焦点"
+- **section1.headline_analysis**: "该新闻反映了全球经济的波动性与科技产业的韧性。尽管全球市场存在不确定性，但日本股市的反弹表明投资者对科技、尤其是AI相关产业的信心增强。对于科研学者而言，这预示着AI技术在基础研究和应用领域的持续升温，可能带来新的合作机会和资金支持。"
+- **section2.research_funding**: "今日新闻中并未直接提及科研基金信息，但AI和新能源领域的热度提升，暗示政府和企业对相关技术的支持力度加大。建议关注国家自然科学基金、国家重点研发计划等专项基金，尤其是人工智能与能源、材料交叉方向的项目。可主动联系高校或科研机构的基金申报办公室，获取最新动态并提前准备申请材料。"
 
-**Updated** AI brief examples now reflect analysis of the expanded 164-article dataset with enhanced insights and recommendations.
+**Updated** AI brief examples now reflect analysis of the standardized 159-article dataset with comprehensive insights and recommendations.
 
 **Section sources**
 - [data/news.json:6-17](file://data/news.json#L6-L17)
@@ -375,20 +377,21 @@ AI Brief Example (partial):
 - [data/brief.json:2-23](file://data/brief.json#L2-L23)
 
 ### Data Validation Testing Procedures and Quality Assurance
-Enhanced validation testing procedures for the expanded dataset:
+Enhanced validation testing procedures for the standardized dataset:
 - **Unit-level checks**:
   - Title cleaning and filtering logic verified by the enhanced fetcher's validation routines
-  - RSS and web parsing robustness tested via retries and fallback strategies across 67+ sources
-  - AI response parsing validated with JSON extraction and fallback mechanisms for 164 articles
+  - RSS and web parsing robustness tested via retries and fallback strategies across 40+ sources
+  - AI response parsing validated with JSON extraction and fallback mechanisms for 159 articles
+  - Schema validation for standardized JSON structure and comprehensive brief format
 - **Integration-level checks**:
-  - Frontend rendering validated by loading data/news.json (164 articles) and data/brief.json and verifying sort controls and detail toggles
+  - Frontend rendering validated by loading data/news.json (159 articles) and data/brief.json and verifying sort controls and detail toggles
   - AI brief rendering tested with both AI-generated and fallback content modes
 - **Manual QA**:
-  - Inspect brief.html for categorized insights and tag generation from expanded dataset
+  - Inspect brief.html for categorized insights and tag generation from standardized dataset
   - Confirm update_time reflects recent processing with enhanced accuracy
   - Verify AI provider configuration and API response handling for larger datasets
 
-**Updated** Testing procedures now accommodate the significantly expanded dataset with enhanced validation and quality assurance.
+**Updated** Testing procedures now accommodate the standardized dataset with enhanced validation and quality assurance.
 
 **Section sources**
 - [scripts/fetch_news.py:69-83](file://scripts/fetch_news.py#L69-L83)
@@ -398,25 +401,25 @@ Enhanced validation testing procedures for the expanded dataset:
 - [brief.html:401-505](file://brief.html#L401-L505)
 
 ### Backup, Migration, and Recovery
-Enhanced backup, migration, and recovery procedures for the expanded dataset:
+Enhanced backup, migration, and recovery procedures for the standardized dataset:
 - **Backup**:
-  - Commit and push changes via the provided script to preserve the significantly expanded dataset history
-  - Both news.json (164 articles) and brief.json are tracked in version control
+  - Commit and push changes via the provided script to preserve the standardized dataset history
+  - Both news.json (159 articles) and brief.json are tracked in version control
 - **Migration**:
   - To a new host or branch, clone the repository and ensure the data directory exists
-  - Configure AI provider environment variables for brief generation with expanded dataset
+  - Configure AI provider environment variables for brief generation with standardized dataset
 - **Recovery**:
-  - Re-run the enhanced fetcher locally or trigger the GitHub Actions workflow to regenerate data/news.json (164 articles)
-  - Regenerate AI briefs by running generate_brief.py or triggering the workflow with larger dataset
+  - Re-run the enhanced fetcher locally or trigger the GitHub Actions workflow to regenerate data/news.json (159 articles)
+  - Regenerate AI briefs by running generate_brief.py or triggering the workflow with standardized dataset
 
-**Updated** Backup and recovery procedures now handle the significantly expanded dataset with enhanced reliability and scalability.
+**Updated** Backup and recovery procedures now handle the standardized dataset with enhanced reliability and scalability.
 
 **Section sources**
 - [push.sh:1-60](file://push.sh#L1-L60)
 - [.github/workflows/update-news.yml:28-37](file://.github/workflows/update-news.yml#L28-L37)
 
 ## Dependency Analysis
-Enhanced external dependencies for the expanded system with minimal footprint focused on web scraping, parsing, and AI API integration.
+Enhanced external dependencies for the standardized system with minimal footprint focused on web scraping, parsing, and AI API integration.
 
 ```mermaid
 graph LR
@@ -434,52 +437,52 @@ H --> K["Moonshot API"]
 H --> L["Qwen API"]
 ```
 
-**Updated** Dependencies now support the significantly expanded dataset with enhanced processing capabilities.
+**Updated** Dependencies now support the standardized dataset with enhanced processing capabilities.
 
 **Diagram sources**
-- [requirements.txt:1-4](file://requirements.txt#L1-L4)
+- [requirements.txt:1-5](file://requirements.txt#L1-L5)
 - [scripts/fetch_news.py:1-11](file://scripts/fetch_news.py#L1-L11)
 - [scripts/generate_brief.py:18-25](file://scripts/generate_brief.py#L18-L25)
 
 **Section sources**
-- [requirements.txt:1-4](file://requirements.txt#L1-L4)
+- [requirements.txt:1-5](file://requirements.txt#L1-L5)
 - [scripts/fetch_news.py:1-11](file://scripts/fetch_news.py#L1-L11)
 - [scripts/generate_brief.py:18-25](file://scripts/generate_brief.py#L18-L25)
 
 ## Performance Considerations
-Enhanced performance considerations for the significantly expanded dataset:
-- **Dataset size**: The current dataset contains 164 articles (representing 79% growth); sorting and rendering remain efficient for a static HTML site
-- **Network latency**: Enhanced retry logic and timeouts reduce failure rates during scraping across 67+ sources and AI API calls
-- **AI Processing**: Brief generation adds processing overhead but provides significant value through personalized insights from 164 articles
-- **Rendering**: Sorting and pagination (top/bottom 20) keep the UI responsive with the expanded dataset
+Enhanced performance considerations for the standardized dataset:
+- **Dataset size**: The current dataset contains 159 articles; sorting and rendering remain efficient for a static HTML site
+- **Network latency**: Enhanced retry logic and timeouts reduce failure rates during scraping across 40+ sources and AI API calls
+- **AI Processing**: Brief generation adds processing overhead but provides significant value through comprehensive insights from 159 articles
+- **Rendering**: Sorting and pagination (top/bottom 20) keep the UI responsive with the standardized dataset
 - **Recommendations**:
-  - Consider precomputing hotness scores server-side if the dataset grows substantially beyond 164 articles
+  - Consider precomputing hotness scores server-side if the dataset grows substantially beyond 159 articles
   - Add cache headers or CDN for faster delivery if hosting externally with larger datasets
-  - Implement incremental updates to avoid rewriting the entire expanded dataset
-  - Optimize AI API calls with proper rate limiting and error handling for 164-article processing
+  - Implement incremental updates to avoid rewriting the entire standardized dataset
+  - Optimize AI API calls with proper rate limiting and error handling for 159-article processing
 
-**Updated** Performance considerations now address the significantly larger dataset scale with enhanced optimization strategies.
+**Updated** Performance considerations now address the standardized dataset scale with enhanced optimization strategies.
 
 ## Troubleshooting Guide
-Enhanced troubleshooting guide for the expanded dataset:
+Enhanced troubleshooting guide for the standardized dataset:
 - **Data not updating**:
   - Verify GitHub Actions schedule and manual dispatch for enhanced processing
-  - Check network connectivity and retry logic in the enhanced fetcher across 67+ sources
-  - Ensure AI provider API keys are properly configured for 164-article processing
+  - Check network connectivity and retry logic in the enhanced fetcher across 40+ sources
+  - Ensure AI provider API keys are properly configured for 159-article processing
 - **Empty or missing content**:
-  - Review enhanced content extraction logic for specific sources in the expanded dataset
-  - Ensure selectors and meta tags are still valid for 67+ sources
+  - Review enhanced content extraction logic for specific sources in the standardized dataset
+  - Ensure selectors and meta tags are still valid for 40+ sources
   - Verify AI API responses are being parsed correctly for larger dataset
 - **AI Brief generation failures**:
-  - Check AI provider configuration and API key validity for expanded processing
-  - Monitor API rate limits and quota usage for 164-article analysis
+  - Check AI provider configuration and API key validity for standardized processing
+  - Monitor API rate limits and quota usage for 159-article analysis
   - Verify environment variable configuration for enhanced AI processing
 - **Frontend errors**:
-  - Confirm data/news.json (164 articles) and data/brief.json are present and readable
-  - Validate JSON formatting and required fields for expanded dataset
+  - Confirm data/news.json (159 articles) and data/brief.json are present and readable
+  - Validate JSON formatting and required fields for standardized dataset
   - Check browser console for JavaScript errors in brief rendering with larger data
 
-**Updated** Troubleshooting guide now addresses issues specific to the significantly expanded dataset with enhanced complexity.
+**Updated** Troubleshooting guide now addresses issues specific to the standardized dataset with enhanced complexity.
 
 **Section sources**
 - [.github/workflows/update-news.yml:3-6](file://.github/workflows/update-news.yml#L3-L6)
@@ -489,7 +492,7 @@ Enhanced troubleshooting guide for the expanded dataset:
 - [brief.html:381-399](file://brief.html#L381-L399)
 
 ## Conclusion
-The Daily News system employs a straightforward, maintainable data model centered on a single JSON file, now significantly enhanced with 700+ new items representing 79% growth. The enhanced fetcher enforces validation and cleaning rules across 67+ sources, uses deterministic hashing for duplicates, and exposes a simple metadata schema with improved engagement metrics. The new AI brief generation system provides personalized insights through configurable AI providers, adding significant value for researchers from the expanded 164-article dataset. The frontend consumes both raw news data and AI-generated briefs to deliver interactive, sortable news lists and curated summaries. While the current lifecycle is simple (overwrite on each run), the architecture supports easy extension for rotation, caching, and advanced scoring, with the added benefit of AI-driven content analysis from the significantly expanded dataset.
+The Daily News system employs a modernized, standardized data model centered on JSON schemas, featuring enhanced validation and cleaning rules across 40+ sources, deterministic hashing for duplicates, and comprehensive AI analysis through structured four-section briefs. The system provides a standardized news data schema with improved engagement metrics and a comprehensive AI brief structure with headline analysis, research funding guidance, academic opportunities, and investment recommendations. The frontend consumes both standardized news data and AI-generated briefs to deliver interactive, sortable news lists and curated insights. While the current lifecycle is simple (overwrite on each run), the architecture supports easy extension for rotation, caching, and advanced scoring, with the added benefit of AI-driven content analysis from the standardized dataset.
 
 ## Appendices
 
@@ -551,7 +554,7 @@ AI_BRIEF ||--o{ SECTION3 : "generates"
 AI_BRIEF ||--o{ SECTION4 : "generates"
 ```
 
-**Updated** Enhanced schema reflecting the significantly expanded dataset with 164 articles and improved metadata fields.
+**Updated** Enhanced schema reflecting the standardized dataset with 159 articles and comprehensive AI analysis framework.
 
 **Diagram sources**
 - [data/news.json:1-10](file://data/news.json#L1-L10)
@@ -559,16 +562,16 @@ AI_BRIEF ||--o{ SECTION4 : "generates"
 - [data/brief.json:1-66](file://data/brief.json#L1-L66)
 
 ### Appendix B: Enhanced AI Provider Configuration
-The system supports multiple AI providers with the following configuration options for processing the expanded dataset:
+The system supports multiple AI providers with the following configuration options for processing the standardized dataset:
 
-- **DeepSeek**: Default provider with `deepseek-chat` model for 164-article analysis
+- **DeepSeek**: Default provider with `deepseek-chat` model for 159-article analysis
 - **OpenAI**: Compatible with `gpt-4o-mini` model for enhanced processing
 - **Moonshot**: Chinese provider with `moonshot-v1-8k` model for Chinese content
 - **Qwen**: Alibaba Cloud with `qwen-turbo` model for scalable processing
 
-Configuration requires setting appropriate environment variables for each provider type with enhanced API integration.
+Configuration requires setting appropriate environment variables for each provider type with enhanced API integration and structured analysis framework.
 
-**Updated** AI provider configuration now supports processing the significantly expanded 164-article dataset with enhanced scalability and performance.
+**Updated** AI provider configuration now supports processing the standardized 159-article dataset with enhanced scalability and performance.
 
 **Section sources**
 - [scripts/generate_brief.py:36-58](file://scripts/generate_brief.py#L36-L58)
