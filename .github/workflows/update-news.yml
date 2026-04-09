@@ -38,6 +38,21 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Install and connect Cloudflare WARP
+      run: |
+        # Add Cloudflare GPG key and repository
+        curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
+        echo "deb [arch=amd64 signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+        # Install WARP
+        sudo apt-get update && sudo apt-get install -y cloudflare-warp
+        # Register and connect
+        sudo warp-cli registration new
+        sudo warp-cli connect
+        # Wait for connection
+        sleep 10
+        # Verify connection
+        curl -s https://www.cloudflare.com/cdn-cgi/trace/
+
     - name: Fetch and process news
       run: |
         python scripts/fetch_news.py
