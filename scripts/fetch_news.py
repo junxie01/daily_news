@@ -69,9 +69,16 @@ class NewsFetcher:
     def get_with_retry(self, url, timeout=None):
         """带重试机制的GET请求"""
         timeout = timeout or self.timeout
+        # 从环境变量获取代理设置
+        proxies = {}
+        if os.environ.get('HTTP_PROXY'):
+            proxies['http'] = os.environ.get('HTTP_PROXY')
+        if os.environ.get('HTTPS_PROXY'):
+            proxies['https'] = os.environ.get('HTTPS_PROXY')
+        
         for attempt in range(self.max_retries):
             try:
-                response = self.session.get(url, timeout=timeout)
+                response = self.session.get(url, timeout=timeout, proxies=proxies if proxies else None)
                 response.raise_for_status()  # 检查HTTP状态码
                 return response
             except Exception as e:
