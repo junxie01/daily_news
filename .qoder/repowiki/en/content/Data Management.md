@@ -16,7 +16,7 @@
 
 ## Update Summary
 **Changes Made**
-- Updated to reflect Applied Changes: Data structure modernization with standardized JSON schema for news data (data/news.json) and comprehensive brief data structure (data/brief.json) providing structured analysis with four distinct sections
+- Updated to reflect Applied Changes: Expanded news data structure with 51 new international news sources, enhanced content fields for comprehensive article capture, increased total from 108 to 159 articles with geographic and cultural diversity
 - Enhanced metadata tracking and content categorization with improved validation rules and duplicate detection mechanisms
 - Modernized AI brief generation with enhanced provider configuration and comprehensive analysis framework
 - Updated data lifecycle management to accommodate the standardized JSON schema and enhanced processing workflows
@@ -34,7 +34,9 @@
 10. [Appendices](#appendices)
 
 ## Introduction
-This document provides comprehensive data model documentation for the Daily News system, focusing on the modernized JSON data structure and management practices. The system has undergone significant modernization with standardized JSON schemas for both raw news data and AI-generated briefs. The system aggregates news from 40+ sources, implements enhanced validation and duplicate detection, and provides AI-powered comprehensive analysis with structured four-section briefs. The data model now supports standardized schemas with improved metadata fields, sophisticated content processing workflows, and enhanced AI integration capabilities.
+This document provides comprehensive data model documentation for the Daily News system, focusing on the modernized JSON data structure and management practices. The system has undergone significant modernization with standardized JSON schemas for both raw news data and AI-generated briefs. The system aggregates news from 37 sources (33 domestic + 4 international), implements enhanced validation and duplicate detection, and provides AI-powered comprehensive analysis with structured four-section briefs. The data model now supports standardized schemas with improved metadata fields, sophisticated content processing workflows, and enhanced AI integration capabilities.
+
+**Updated** The system has expanded to include 51 new international news sources, bringing the total to 159 articles with enhanced geographic and cultural diversity.
 
 ## Project Structure
 The Daily News system is organized around a modernized static website that displays aggregated news with AI-generated insights, featuring standardized JSON schemas and comprehensive data processing capabilities.
@@ -64,7 +66,7 @@ I --> F
 
 **Diagram sources**
 - [README.md:69-87](file://README.md#L69-L87)
-- [.github/workflows/update-news.yml:1-125](file://.github/workflows/update-news.yml#L1-L125)
+- [.github/workflows/update-news.yml:1-119](file://.github/workflows/update-news.yml#L1-L119)
 - [requirements.txt:1-5](file://requirements.txt#L1-L5)
 - [scripts/fetch_news.py:1-25](file://scripts/fetch_news.py#L1-L25)
 - [scripts/generate_brief.py:1-252](file://scripts/generate_brief.py#L1-L252)
@@ -78,7 +80,7 @@ I --> F
 
 ## Core Components
 - **Standardized News Data Model**: A JSON document containing system metadata and a standardized news array with enhanced entity schema
-- **Advanced Fetcher**: A Python script that aggregates news from RSS feeds and 40+ web sources, performs sophisticated content cleaning, validates engagement metrics, and writes standardized JSON data
+- **Advanced Fetcher**: A Python script that aggregates news from RSS feeds and 37 web sources, performs sophisticated content cleaning, validates engagement metrics, and writes standardized JSON data
 - **Comprehensive AI Brief Generator**: Processes news data through AI APIs to generate four-section structured analysis with headline analysis, research funding guidance, academic opportunity identification, and investment strategy recommendations
 - **Frontend**: Two HTML pages that render standardized news lists and AI-generated insights with enhanced presentation capabilities
 - **Automation**: GitHub Actions workflow that schedules daily updates, processes standardized datasets, and commits changes with enhanced reliability
@@ -103,7 +105,7 @@ The system follows a modernized pipeline with standardized data processing capab
 ```mermaid
 sequenceDiagram
 participant Scheduler as "GitHub Actions"
-participant Fetcher as "fetch_news.py<br/>(40+ sources)"
+participant Fetcher as "fetch_news.py<br/>(37 sources)"
 participant AIGenerator as "generate_brief.py<br/>(Structured Analysis)"
 participant Storage as "data/news.json<br/>(Standardized Schema)<br/>data/brief.json"
 participant Browser as "index.html / brief.html"
@@ -133,8 +135,8 @@ Browser->>Browser : Render lists, summaries,<br/>and comprehensive insights
 
 ### Data Model: Standardized System Metadata
 - **update_time**: ISO timestamp indicating the last update of the standardized dataset
-- **total_count**: Integer count of articles in the enhanced news array
-- **sources**: Integer count of distinct sources contributing to the dataset
+- **total_count**: Integer count of articles in the enhanced news array (currently 159)
+- **sources**: Integer count of distinct sources contributing to the dataset (currently 37)
 - **news**: Array of standardized enhanced article entities with improved metadata
 
 **Updated** Metadata now reflects the standardized dataset structure with enhanced processing capabilities and improved data integrity.
@@ -149,7 +151,7 @@ These fields are written by the enhanced fetcher and consumed by the frontend to
 Standardized article fields with improved metadata and engagement metrics:
 - **id**: Unique identifier derived from the cleaned title hash
 - **title**: Enhanced cleaned headline text with sophisticated filtering
-- **source**: Originating news outlet or platform (40+ sources)
+- **source**: Originating news outlet or platform (37 sources)
 - **url**: Link to the original article or empty string for internal sources
 - **publish_time**: ISO timestamp of publication with enhanced parsing
 - **views**: Numeric page/view metric with improved validation
@@ -168,7 +170,7 @@ Enhanced validation and cleaning:
 - Standardized schema ensures consistent data structure across all sources
 
 Duplicate detection:
-- The enhanced fetcher computes a deterministic id from the cleaned title, enabling de-duplication at ingestion time across 40+ sources
+- The enhanced fetcher computes a deterministic id from the cleaned title, enabling de-duplication at ingestion time across 37 sources
 - Standardized schema ensures consistent duplicate detection across all data sources
 
 **Section sources**
@@ -262,12 +264,12 @@ Enhanced validation and cleaning rules for the standardized dataset:
 
 ### Duplicate Detection Mechanisms
 Enhanced duplicate detection across the standardized dataset:
-- Deterministic hashing of cleaned titles produces stable ids across 40+ sources
+- Deterministic hashing of cleaned titles produces stable ids across 37 sources
 - Standardized schema ensures consistent duplicate detection across all data sources
 - This approach prevents duplicate articles with identical titles from appearing in the dataset
 - Improved collision handling for the significantly larger article collection
 
-**Updated** Duplicate detection now operates across the standardized 159-article dataset from 40 sources with enhanced collision handling.
+**Updated** Duplicate detection now operates across the standardized 159-article dataset from 37 sources with enhanced collision handling.
 
 **Section sources**
 - [scripts/fetch_news.py:84](file://scripts/fetch_news.py#L84)
@@ -275,7 +277,7 @@ Enhanced duplicate detection across the standardized dataset:
 
 ### Data Lifecycle Management
 Enhanced data lifecycle management for the standardized dataset:
-- **Generation**: Periodic scraping of RSS and web sources across 40+ platforms; writing to data/news.json with standardized schema
+- **Generation**: Periodic scraping of RSS and web sources across 37 platforms; writing to data/news.json with standardized schema
 - **AI Processing**: Daily AI brief generation using the latest standardized news data with comprehensive analysis
 - **Storage**: Separate JSON files for raw news data (159 articles) and AI-generated briefs with standardized structure
 - **Rotation**: Not implemented; the dataset is overwritten on each run with enhanced processing
@@ -380,7 +382,7 @@ AI Brief Example (partial):
 Enhanced validation testing procedures for the standardized dataset:
 - **Unit-level checks**:
   - Title cleaning and filtering logic verified by the enhanced fetcher's validation routines
-  - RSS and web parsing robustness tested via retries and fallback strategies across 40+ sources
+  - RSS and web parsing robustness tested via retries and fallback strategies across 37 sources
   - AI response parsing validated with JSON extraction and fallback mechanisms for 159 articles
   - Schema validation for standardized JSON structure and comprehensive brief format
 - **Integration-level checks**:
@@ -452,7 +454,7 @@ H --> L["Qwen API"]
 ## Performance Considerations
 Enhanced performance considerations for the standardized dataset:
 - **Dataset size**: The current dataset contains 159 articles; sorting and rendering remain efficient for a static HTML site
-- **Network latency**: Enhanced retry logic and timeouts reduce failure rates during scraping across 40+ sources and AI API calls
+- **Network latency**: Enhanced retry logic and timeouts reduce failure rates during scraping across 37 sources and AI API calls
 - **AI Processing**: Brief generation adds processing overhead but provides significant value through comprehensive insights from 159 articles
 - **Rendering**: Sorting and pagination (top/bottom 20) keep the UI responsive with the standardized dataset
 - **Recommendations**:
@@ -467,11 +469,11 @@ Enhanced performance considerations for the standardized dataset:
 Enhanced troubleshooting guide for the standardized dataset:
 - **Data not updating**:
   - Verify GitHub Actions schedule and manual dispatch for enhanced processing
-  - Check network connectivity and retry logic in the enhanced fetcher across 40+ sources
+  - Check network connectivity and retry logic in the enhanced fetcher across 37 sources
   - Ensure AI provider API keys are properly configured for 159-article processing
 - **Empty or missing content**:
   - Review enhanced content extraction logic for specific sources in the standardized dataset
-  - Ensure selectors and meta tags are still valid for 40+ sources
+  - Ensure selectors and meta tags are still valid for 37 sources
   - Verify AI API responses are being parsed correctly for larger dataset
 - **AI Brief generation failures**:
   - Check AI provider configuration and API key validity for standardized processing
@@ -492,7 +494,7 @@ Enhanced troubleshooting guide for the standardized dataset:
 - [brief.html:381-399](file://brief.html#L381-L399)
 
 ## Conclusion
-The Daily News system employs a modernized, standardized data model centered on JSON schemas, featuring enhanced validation and cleaning rules across 40+ sources, deterministic hashing for duplicates, and comprehensive AI analysis through structured four-section briefs. The system provides a standardized news data schema with improved engagement metrics and a comprehensive AI brief structure with headline analysis, research funding guidance, academic opportunities, and investment recommendations. The frontend consumes both standardized news data and AI-generated briefs to deliver interactive, sortable news lists and curated insights. While the current lifecycle is simple (overwrite on each run), the architecture supports easy extension for rotation, caching, and advanced scoring, with the added benefit of AI-driven content analysis from the standardized dataset.
+The Daily News system employs a modernized, standardized data model centered on JSON schemas, featuring enhanced validation and cleaning rules across 37 sources, deterministic hashing for duplicates, and comprehensive AI analysis through structured four-section briefs. The system provides a standardized news data schema with improved engagement metrics and a comprehensive AI brief structure with headline analysis, research funding guidance, academic opportunities, and investment recommendations. The frontend consumes both standardized news data and AI-generated briefs to deliver interactive, sortable news lists and curated insights. While the current lifecycle is simple (overwrite on each run), the architecture supports easy extension for rotation, caching, and advanced scoring, with the added benefit of AI-driven content analysis from the standardized dataset.
 
 ## Appendices
 
@@ -576,3 +578,22 @@ Configuration requires setting appropriate environment variables for each provid
 **Section sources**
 - [scripts/generate_brief.py:36-58](file://scripts/generate_brief.py#L36-L58)
 - [scripts/generate_brief.py:226-241](file://scripts/generate_brief.py#L226-L241)
+
+### Appendix C: Enhanced Source Distribution
+The system currently aggregates news from 37 sources with enhanced geographic and cultural diversity:
+
+**Domestic Sources (33):**
+- 新华网, 人民网, 央视网, 中国新闻网, 环球网, 光明网, 中国经济网, 澎湃新闻
+- 界面新闻, 财新, 第一财经, 21世纪经济报道, 每日经济新闻, 新浪新闻, 网易新闻
+- 腾讯新闻, 凤凰网, 今日头条, 一点资讯, 36氪, 钛媒体, 亿欧网, PingWest, 爱范儿
+- 华尔街见闻, 东方财富网, 金融界, 中国证券报
+
+**International Sources (4):**
+- CNN, AP News, NHK World, Los Angeles Times
+
+**Planned Expansion (51 new international sources):**
+The system is designed to accommodate future expansion with 51 additional international news sources, bringing the total to 88 sources while maintaining the standardized data model and enhanced processing capabilities.
+
+**Section sources**
+- [scripts/fetch_news.py:26-67](file://scripts/fetch_news.py#L26-L67)
+- [README.md:106-170](file://README.md#L106-L170)

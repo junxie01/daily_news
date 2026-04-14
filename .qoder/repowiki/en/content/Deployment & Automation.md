@@ -8,19 +8,19 @@
 - [generate_brief.py](file://scripts/generate_brief.py)
 - [requirements.txt](file://requirements.txt)
 - [news.json](file://data/news.json)
-- [brief.json](file://data/brief.json)
-- [index.html](file://index.html)
 - [brief.html](file://brief.html)
+- [index.html](file://index.html)
 - [test_connections.py](file://test_connections.py)
 </cite>
 
 ## Update Summary
 **Changes Made**
-- Enhanced GitHub Actions workflow with Cloudflare WARP integration for international news access
+- Enhanced GitHub Actions workflow with Cloudflare WARP proxy integration for international news access
 - Added comprehensive AI-powered news analysis and personalization capabilities
 - Improved permissions management with write access to repository contents, GitHub Pages, and ID tokens
 - Enhanced deployment pipeline with dual data file management and robust error handling
 - Updated HTML rendering to support AI-generated content with dynamic fallback mechanisms
+- **Updated**: Cloudflare WARP service installation, configuration, and network connectivity testing in workflow
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -75,23 +75,21 @@ S --> R
 - [update-news.yml:41-67](file://.github/workflows/update-news.yml#L41-L67)
 - [update-news.yml:69-101](file://.github/workflows/update-news.yml#L69-L101)
 - [requirements.txt:1-5](file://requirements.txt#L1-L5)
-- [fetch_news.py:1-2229](file://scripts/fetch_news.py#L1-L2229)
+- [fetch_news.py:1-2222](file://scripts/fetch_news.py#L1-L2222)
 - [generate_brief.py:1-252](file://scripts/generate_brief.py#L1-L252)
 - [news.json:1-2074](file://data/news.json#L1-L2074)
-- [brief.json:1-66](file://data/brief.json#L1-L66)
-- [index.html:1-419](file://index.html#L1-L419)
 - [brief.html:1-899](file://brief.html#L1-L899)
+- [index.html:1-419](file://index.html#L1-L419)
 - [push.sh:1-73](file://push.sh#L1-L73)
 
 **Section sources**
-- [update-news.yml:1-125](file://.github/workflows/update-news.yml#L1-L125)
+- [update-news.yml:1-119](file://.github/workflows/update-news.yml#L1-L119)
 - [requirements.txt:1-5](file://requirements.txt#L1-L5)
-- [fetch_news.py:1-2229](file://scripts/fetch_news.py#L1-L2229)
+- [fetch_news.py:1-2222](file://scripts/fetch_news.py#L1-L2222)
 - [generate_brief.py:1-252](file://scripts/generate_brief.py#L1-L252)
 - [news.json:1-2074](file://data/news.json#L1-L2074)
-- [brief.json:1-66](file://data/brief.json#L1-L66)
-- [index.html:1-419](file://index.html#L1-L419)
 - [brief.html:1-899](file://brief.html#L1-L899)
+- [index.html:1-419](file://index.html#L1-L419)
 - [push.sh:1-73](file://push.sh#L1-L73)
 - [test_connections.py:1-45](file://test_connections.py#L1-L45)
 
@@ -104,15 +102,14 @@ S --> R
 - **Dependencies**: Python packages required for scraping, parsing, AI integration, and proxy configuration.
 
 **Section sources**
-- [update-news.yml:21-125](file://.github/workflows/update-news.yml#L21-L125)
+- [update-news.yml:21-119](file://.github/workflows/update-news.yml#L21-L119)
 - [push.sh:1-73](file://push.sh#L1-L73)
 - [fetch_news.py:12-25](file://scripts/fetch_news.py#L12-L25)
 - [generate_brief.py:30-60](file://scripts/generate_brief.py#L30-L60)
 - [requirements.txt:1-5](file://requirements.txt#L1-L5)
 - [news.json:1-2074](file://data/news.json#L1-L2074)
-- [brief.json:1-66](file://data/brief.json#L1-L66)
-- [index.html:1-419](file://index.html#L1-L419)
 - [brief.html:1-899](file://brief.html#L1-L899)
+- [index.html:1-419](file://index.html#L1-L419)
 
 ## Architecture Overview
 The deployment pipeline consists of two primary paths with enhanced capabilities:
@@ -135,7 +132,7 @@ Actions->>Actions : "Set up Python"
 Actions->>WARP : "Install and configure WARP"
 WARP->>WARP : "Connect to international networks"
 Actions->>Actions : "Install dependencies"
-Actions->>Fetcher : "Execute fetch_news.py with proxy"
+Actions->>Fetcher : "Execute fetch_news.py"
 Fetcher->>NewsData : "Generate/Update dataset"
 Actions->>BriefGen : "Execute generate_brief.py"
 BriefGen->>BriefData : "Generate/Update AI brief"
@@ -144,11 +141,11 @@ VCS-->>Actions : "Success"
 ```
 
 **Diagram sources**
-- [update-news.yml:3-125](file://.github/workflows/update-news.yml#L3-L125)
-- [fetch_news.py:1-2229](file://scripts/fetch_news.py#L1-L2229)
+- [update-news.yml:3-119](file://.github/workflows/update-news.yml#L3-L119)
+- [fetch_news.py:1-2222](file://scripts/fetch_news.py#L1-L2222)
 - [generate_brief.py:1-252](file://scripts/generate_brief.py#L1-L252)
 - [news.json:1-2074](file://data/news.json#L1-L2074)
-- [brief.json:1-66](file://data/brief.json#L1-L66)
+- [brief.html:1-899](file://brief.html#L1-L899)
 
 ## Detailed Component Analysis
 
@@ -182,10 +179,10 @@ S10 --> End(["Completed"])
 ```
 
 **Diagram sources**
-- [update-news.yml:3-125](file://.github/workflows/update-news.yml#L3-L125)
+- [update-news.yml:3-119](file://.github/workflows/update-news.yml#L3-L119)
 
 **Section sources**
-- [update-news.yml:1-125](file://.github/workflows/update-news.yml#L1-L125)
+- [update-news.yml:1-119](file://.github/workflows/update-news.yml#L1-L119)
 
 ### Enhanced Manual Deployment Script (push.sh)
 - **Purpose**: Local/emergency deployment to synchronize with remote, handle conflicts for both news and brief datasets, and push changes.
@@ -298,7 +295,7 @@ class AIBriefGenerator {
 
 **Section sources**
 - [generate_brief.py:1-252](file://scripts/generate_brief.py#L1-L252)
-- [brief.json:1-66](file://data/brief.json#L1-L66)
+- [brief.html:1-899](file://brief.html#L1-L899)
 
 ### Enhanced Static Pages Rendering (index.html, brief.html)
 - **Both pages load data from datasets**:
@@ -322,15 +319,14 @@ F["Fallback Mechanism"] --> C
 
 **Diagram sources**
 - [news.json:1-2074](file://data/news.json#L1-L2074)
-- [brief.json:1-66](file://data/brief.json#L1-L66)
-- [index.html:1-419](file://index.html#L1-L419)
 - [brief.html:1-899](file://brief.html#L1-L899)
+- [index.html:1-419](file://index.html#L1-L419)
 
 **Section sources**
 - [index.html:1-419](file://index.html#L1-L419)
 - [brief.html:1-899](file://brief.html#L1-L899)
 - [news.json:1-2074](file://data/news.json#L1-L2074)
-- [brief.json:1-66](file://data/brief.json#L1-L66)
+- [brief.html:1-899](file://brief.html#L1-L899)
 
 ## Dependency Analysis
 - **Enhanced workflow depends on**:
@@ -359,21 +355,21 @@ S --> DB
 ```
 
 **Diagram sources**
-- [update-news.yml:18-125](file://.github/workflows/update-news.yml#L18-L125)
+- [update-news.yml:18-119](file://.github/workflows/update-news.yml#L18-L119)
 - [requirements.txt:1-5](file://requirements.txt#L1-L5)
-- [fetch_news.py:1-2229](file://scripts/fetch_news.py#L1-L2229)
+- [fetch_news.py:1-2222](file://scripts/fetch_news.py#L1-L2222)
 - [generate_brief.py:1-252](file://scripts/generate_brief.py#L1-L252)
 - [news.json:1-2074](file://data/news.json#L1-L2074)
-- [brief.json:1-66](file://data/brief.json#L1-L66)
+- [brief.html:1-899](file://brief.html#L1-L899)
 - [push.sh:1-73](file://push.sh#L1-L73)
 
 **Section sources**
-- [update-news.yml:18-125](file://.github/workflows/update-news.yml#L18-L125)
+- [update-news.yml:18-119](file://.github/workflows/update-news.yml#L18-L119)
 - [requirements.txt:1-5](file://requirements.txt#L1-L5)
-- [fetch_news.py:1-2229](file://scripts/fetch_news.py#L1-L2229)
+- [fetch_news.py:1-2222](file://scripts/fetch_news.py#L1-L2222)
 - [generate_brief.py:1-252](file://scripts/generate_brief.py#L1-L252)
 - [news.json:1-2074](file://data/news.json#L1-L2074)
-- [brief.json:1-66](file://data/brief.json#L1-L66)
+- [brief.html:1-899](file://brief.html#L1-L899)
 - [push.sh:1-73](file://push.sh#L1-L73)
 
 ## Performance Considerations
@@ -383,7 +379,7 @@ S --> DB
 - **Build time**: The workflow installs dependencies each run; caching could reduce latency if the dependency set stabilizes.
 - **Concurrency**: The scheduler runs once daily; avoid overlapping jobs to prevent resource contention.
 - **API costs**: AI brief generation incurs API costs - configure appropriate provider limits and fallback strategies.
-- ****New**: **WARP service overhead**: Cloudflare WARP adds initial setup time but enables access to international news sources.
+- **New**: **WARP service overhead**: Cloudflare WARP adds initial setup time but enables access to international news sources.
 
 ## Troubleshooting Guide
 Common issues and resolutions:
@@ -422,7 +418,7 @@ Common issues and resolutions:
   - **New**: Verify WARP proxy is properly configured for international access.
 
 **Section sources**
-- [update-news.yml:13-125](file://.github/workflows/update-news.yml#L13-L125)
+- [update-news.yml:13-119](file://.github/workflows/update-news.yml#L13-L119)
 - [push.sh:27-53](file://push.sh#L27-L53)
 - [generate_brief.py:57-58](file://scripts/generate_brief.py#L57-L58)
 - [test_connections.py:1-45](file://test_connections.py#L1-L45)
@@ -442,7 +438,7 @@ The enhanced deployment and automation system combines a reliable GitHub Actions
   - Static pages automatically detect and render AI-generated content with fallback mechanisms.
 
 **Section sources**
-- [update-news.yml:103-125](file://.github/workflows/update-news.yml#L103-L125)
+- [update-news.yml:97-119](file://.github/workflows/update-news.yml#L97-L119)
 
 ### B. Setting Up GitHub Actions Secrets
 - **Navigate to repository Settings > Secrets and variables > Actions**.
@@ -460,7 +456,7 @@ The enhanced deployment and automation system combines a reliable GitHub Actions
   - `WARP_ACCOUNT_ID`: Cloudflare account identifier
 
 **Section sources**
-- [update-news.yml:76-92](file://.github/workflows/update-news.yml#L76-L92)
+- [update-news.yml:70-86](file://.github/workflows/update-news.yml#L70-L86)
 - [generate_brief.py:36-55](file://scripts/generate_brief.py#L36-L55)
 
 ### C. Configuring Webhook Triggers
@@ -487,7 +483,7 @@ The enhanced deployment and automation system combines a reliable GitHub Actions
 - **Consider CDN deployment** for improved performance and global distribution.
 
 **Section sources**
-- [update-news.yml:103-125](file://.github/workflows/update-news.yml#L103-L125)
+- [update-news.yml:97-119](file://.github/workflows/update-news.yml#L97-L119)
 
 ### F. Rollback Procedures
 - **Use Git history to revert problematic commits** and redeploy.
@@ -517,7 +513,7 @@ The enhanced deployment and automation system combines a reliable GitHub Actions
 
 **Section sources**
 - [generate_brief.py:36-55](file://scripts/generate_brief.py#L36-L55)
-- [update-news.yml:76-92](file://.github/workflows/update-news.yml#L76-L92)
+- [update-news.yml:70-86](file://.github/workflows/update-news.yml#L70-L86)
 
 ### I. Cloudflare WARP Integration Configuration
 - **Service Installation**: The workflow automatically installs and configures Cloudflare WARP.
@@ -527,4 +523,13 @@ The enhanced deployment and automation system combines a reliable GitHub Actions
 
 **Section sources**
 - [update-news.yml:41-67](file://.github/workflows/update-news.yml#L41-L67)
+- [test_connections.py:1-45](file://test_connections.py#L1-L45)
+
+### J. Network Connectivity Testing
+- **Comprehensive site testing**: The system includes test_connections.py to verify access to major international news sources.
+- **Multi-site validation**: Tests BBC, CNN, NYTimes, Reuters, Guardian, FT, Bloomberg, NHK World, Al Jazeera, and other major outlets.
+- **Header configuration**: Uses realistic browser headers to mimic legitimate traffic.
+- **Timeout handling**: Implements 10-second timeouts for reliable testing.
+
+**Section sources**
 - [test_connections.py:1-45](file://test_connections.py#L1-L45)

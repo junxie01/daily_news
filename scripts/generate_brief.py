@@ -28,36 +28,143 @@ import requests
 
 
 class AIBriefGenerator:
+    # Provider configurations with priority order (fallback chain)
+    PROVIDER_CONFIGS = [
+        {
+            'name': 'github_models',
+            'api_key_env': 'GITHUB_TOKEN',
+            'base_url': 'https://models.inference.ai.azure.com',
+            'model': 'gpt-4o-mini',
+            'headers': lambda key: {
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json"
+            }
+        },
+        {
+            'name': 'openrouter',
+            'api_key_env': 'OPENROUTER_API_KEY',
+            'base_url': 'https://openrouter.ai/api/v1',
+            'model': 'google/gemini-flash-1.5',
+            'headers': lambda key: {
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://github.com",
+                "X-Title": "Daily News Brief"
+            }
+        },
+        {
+            'name': 'deepseek',
+            'api_key_env': 'DEEPSEEK_API_KEY',
+            'base_url_env': 'DEEPSEEK_BASE_URL',
+            'base_url_default': 'https://api.deepseek.com/v1',
+            'model_env': 'DEEPSEEK_MODEL',
+            'model_default': 'deepseek-chat',
+            'headers': lambda key: {
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json"
+            }
+        },
+        {
+            'name': 'moonshot',
+            'api_key_env': 'MOONSHOT_API_KEY',
+            'base_url_env': 'MOONSHOT_BASE_URL',
+            'base_url_default': 'https://api.moonshot.cn/v1',
+            'model_env': 'MOONSHOT_MODEL',
+            'model_default': 'moonshot-v1-8k',
+            'headers': lambda key: {
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json"
+            }
+        },
+        {
+            'name': 'qwen',
+            'api_key_env': 'QWEN_API_KEY',
+            'base_url_env': 'QWEN_BASE_URL',
+            'base_url_default': 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+            'model_env': 'QWEN_MODEL',
+            'model_default': 'qwen-turbo',
+            'headers': lambda key: {
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json"
+            }
+        },
+    ]
+
     def __init__(self):
         self.data_dir = project_root / 'data'
         self.data_dir.mkdir(exist_ok=True)
-
-        # 加载配置
-        self.provider = os.getenv('DEFAULT_AI_PROVIDER', 'deepseek').lower()
-
-        if self.provider == 'deepseek':
-            self.api_key = os.getenv('DEEPSEEK_API_KEY')
-            self.base_url = os.getenv('DEEPSEEK_BASE_URL', 'https://api.deepseek.com/v1')
-            self.model = os.getenv('DEEPSEEK_MODEL', 'deepseek-chat')
-        elif self.provider == 'openai':
-            self.api_key = os.getenv('OPENAI_API_KEY')
-            self.base_url = os.getenv('OPENAI_BASE_URL', 'https://api.openai.com/v1')
-            self.model = os.getenv('OPENAI_MODEL', 'gpt-4o-mini')
-        elif self.provider == 'moonshot':
-            self.api_key = os.getenv('MOONSHOT_API_KEY')
-            self.base_url = os.getenv('MOONSHOT_BASE_URL', 'https://api.moonshot.cn/v1')
-            self.model = os.getenv('MOONSHOT_MODEL', 'moonshot-v1-8k')
-        elif self.provider == 'qwen':
-            self.api_key = os.getenv('QWEN_API_KEY')
-            self.base_url = os.getenv('QWEN_BASE_URL', 'https://dashscope.aliyuncs.com/compatible-mode/v1')
-            self.model = os.getenv('QWEN_MODEL', 'qwen-turbo')
-        else:
-            raise ValueError(f"Unknown AI provider: {self.provider}")
-
-        if not self.api_key:
-            raise ValueError(f"API key not found for provider: {self.provider}")
-
+        
+        # Try providers in order until one works
+        self.provider = None
+        self.api_key = None
+        self.base_url = None
+        self.model = None
+        self.headers_func = None
+        
+        # Get preferred provider from env, if any
+        preferred_provider = os.getenv('DEFAULT_AI_PROVIDER', '').lower()
+        
+        # Reorder configs to put preferred provider first
+        configs = self.PROVIDER_CONFIGS.copy()
+        if preferred_provider:
+            for i, config in enumerate(configs):
+                if config['name'] == preferred_provider:
+                    configs.insert(0, configs.pop(i))
+                    break
+        
+        # Try each provider
+        for config in configs:
+            if self._try_init_provider(config):
+                break
+        
+        if not self.provider:
+            raise ValueError("No available AI provider found. Please set at least one API key.")
+        
         print(f"Using AI provider: {self.provider}, model: {self.model}")
+
+    def _try_init_provider(self, config):
+        """Try to initialize a provider, return True if successful"""
+        api_key = os.getenv(config['api_key_env'])
+        if not api_key:
+            return False
+        
+        # Check for payment/balance errors by making a test request
+        base_url = os.getenv(config.get('base_url_env', ''), config.get('base_url_default', config['base_url']))
+        model = os.getenv(config.get('model_env', ''), config.get('model_default', config['model']))
+        
+        headers = config['headers'](api_key)
+        
+        # Test the provider with a minimal request
+        try:
+            test_payload = {
+                "model": model,
+                "messages": [{"role": "user", "content": "Hi"}],
+                "max_tokens": 5
+            }
+            response = requests.post(
+                f"{base_url}/chat/completions",
+                headers=headers,
+                json=test_payload,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                self.provider = config['name']
+                self.api_key = api_key
+                self.base_url = base_url
+                self.model = model
+                self.headers_func = config['headers']
+                return True
+            elif response.status_code in [402, 429]:
+                print(f"Provider {config['name']} has insufficient balance or quota, skipping...")
+                return False
+            else:
+                print(f"Provider {config['name']} returned status {response.status_code}, skipping...")
+                return False
+                
+        except Exception as e:
+            print(f"Provider {config['name']} test failed: {e}, skipping...")
+            return False
 
     def load_news_data(self):
         """加载新闻数据"""
@@ -85,10 +192,7 @@ class AIBriefGenerator:
 
     def call_ai_api(self, prompt):
         """调用AI API"""
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
+        headers = self.headers_func(self.api_key)
 
         payload = {
             "model": self.model,

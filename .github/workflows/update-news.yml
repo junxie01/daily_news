@@ -69,6 +69,11 @@ jobs:
 
     - name: Generate AI Brief
       env:
+        # GitHub Models (free for GitHub Actions)
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # OpenRouter (free tier available)
+        OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        # Other providers
         DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         DEEPSEEK_BASE_URL: ${{ secrets.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1' }}
         DEEPSEEK_MODEL: ${{ secrets.DEEPSEEK_MODEL || 'deepseek-chat' }}
@@ -81,7 +86,7 @@ jobs:
         QWEN_API_KEY: ${{ secrets.QWEN_API_KEY }}
         QWEN_BASE_URL: ${{ secrets.QWEN_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1' }}
         QWEN_MODEL: ${{ secrets.QWEN_MODEL || 'qwen-turbo' }}
-        DEFAULT_AI_PROVIDER: ${{ secrets.DEFAULT_AI_PROVIDER || 'qwen' }}
+        DEFAULT_AI_PROVIDER: ${{ secrets.DEFAULT_AI_PROVIDER || 'github_models' }}
       run: |
         python scripts/generate_brief.py
 

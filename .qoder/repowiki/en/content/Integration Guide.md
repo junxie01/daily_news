@@ -10,7 +10,17 @@
 - [requirements.txt](file://requirements.txt)
 - [scripts/fetch_news.py](file://scripts/fetch_news.py)
 - [scripts/generate_brief.py](file://scripts/generate_brief.py)
+- [test_connections.py](file://test_connections.py)
+- [push.sh](file://push.sh)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Added Cloudflare WARP proxy service integration documentation
+- Documented international news source access testing procedures
+- Enhanced error handling documentation for regional access issues
+- Updated GitHub Actions workflow with proxy service configuration
+- Added troubleshooting guidance for proxy-related connectivity issues
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -23,13 +33,16 @@
 8. [API Usage Patterns](#api-usage-patterns)
 9. [Third-Party Integrations](#third-party-integrations)
 10. [Customization Guidelines](#customization-guidelines)
-11. [Troubleshooting Guide](#troubleshooting-guide)
-12. [Performance Optimization](#performance-optimization)
-13. [Conclusion](#conclusion)
+11. [Regional Access and Proxy Configuration](#regional-access-and-proxy-configuration)
+12. [Troubleshooting Guide](#troubleshooting-guide)
+13. [Performance Optimization](#performance-optimization)
+14. [Conclusion](#conclusion)
 
 ## Introduction
 
 The Daily News system is an automated news aggregation platform that collects and displays trending news from multiple sources including Hacker News, Reddit, and various Chinese news outlets. The system automatically updates daily via GitHub Actions and provides both a main news feed interface and an AI-powered news brief feature designed specifically for researchers and professionals.
+
+**Updated** The system now includes enhanced international news source access through Cloudflare WARP proxy service integration, enabling reliable access to global news sources like CNN, BBC, Reuters, and other international publications even from regions with restricted access.
 
 The platform offers three primary integration methods for incorporating news feeds into existing websites and applications: standalone page deployment, iframe embedding, and subdirectory integration. Each method provides different levels of customization and technical requirements to accommodate various website architectures and design systems.
 
@@ -43,26 +56,30 @@ subgraph "Data Collection Layer"
 A[News Sources] --> B[fetch_news.py]
 B --> C[data/news.json]
 end
+subgraph "Proxy Service Layer"
+D[Cloudflare WARP] --> E[International Access]
+E --> A
+end
 subgraph "Processing Layer"
-C --> D[generate_brief.py]
-D --> E[data/brief.json]
+C --> F[generate_brief.py]
+F --> G[data/brief.json]
 end
 subgraph "Presentation Layer"
-F[index.html] --> G[Main News Feed]
-H[brief.html] --> I[Ai News Brief]
-J[news.json] --> F
-J --> H
+H[index.html] --> I[Main News Feed]
+J[brief.html] --> K[Ai News Brief]
+L[news.json] --> H
+L --> J
 end
 subgraph "Automation"
-K[GitHub Actions] --> L[Daily Updates]
-L --> M[fetch_news.py]
+M[GitHub Actions] --> N[Daily Updates]
+N --> O[fetch_news.py with Proxy]
 end
 ```
 
 **Diagram sources**
 - [scripts/fetch_news.py:12-85](file://scripts/fetch_news.py#L12-L85)
 - [scripts/generate_brief.py:27-54](file://scripts/generate_brief.py#L27-L54)
-- [.github/workflows/update-news.yml:1-38](file://.github/workflows/update-news.yml#L1-L38)
+- [.github/workflows/update-news.yml:41-64](file://.github/workflows/update-news.yml#L41-L64)
 
 **Section sources**
 - [README.md:48-62](file://README.md#L48-L62)
@@ -158,6 +175,11 @@ The Daily News system requires the following technical infrastructure:
 - BeautifulSoup4 for HTML parsing
 - Requests library for HTTP operations
 - lxml parser for efficient XML/HTML processing
+
+**Proxy Service Requirements:**
+- Cloudflare WARP client installation
+- Proxychains-ng for multi-hop routing
+- International access testing capabilities
 
 ### Browser Compatibility
 
@@ -787,6 +809,180 @@ function adaptContentForContext(newsItem, context) {
 - [index.html:7-243](file://index.html#L7-L243)
 - [brief.html:7-346](file://brief.html#L7-L346)
 
+## Regional Access and Proxy Configuration
+
+### Cloudflare WARP Proxy Service Integration
+
+**Updated** The system now includes comprehensive Cloudflare WARP proxy service integration to ensure reliable access to international news sources from regions with restricted internet access.
+
+**Installation and Configuration:**
+```yaml
+# GitHub Actions workflow with WARP proxy setup
+- name: Install and connect Cloudflare WARP
+  run: |
+    # Install proxychains-ng
+    sudo apt-get install -y proxychains-ng
+    # Add Cloudflare GPG key and repository
+    curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+    # Install WARP
+    sudo apt-get update && sudo apt-get install -y cloudflare-warp
+    # Start WARP service
+    sudo systemctl start warp-svc
+    # Wait for service to start
+    sleep 3
+    # Register with TOS acceptance
+    sudo warp-cli --accept-tos registration new
+    # Connect to WARP
+    sudo warp-cli --accept-tos connect
+    # Wait for connection
+    sleep 10
+    # Verify connection
+    curl -s https://www.cloudflare.com/cdn-cgi/trace/
+    # Test accessing international site
+    echo "Testing CNN access..."
+    curl -s -o /dev/null -w "%{http_code}" https://www.cnn.com || echo "CNN access failed"
+```
+
+**Proxy Testing and Validation:**
+```python
+# International news source access testing
+import requests
+
+def test_international_access():
+    sites = [
+        'https://www.bbc.com/news',
+        'https://www.nytimes.com',
+        'https://www.cnn.com',
+        'https://www.reuters.com',
+        'https://apnews.com',
+        'https://www.theguardian.com'
+    ]
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8'
+    }
+    
+    for site in sites:
+        try:
+            response = requests.get(site, timeout=10, headers=headers)
+            print(f'{site}: Status {response.status_code}')
+        except Exception as e:
+            print(f'{site}: Error - {e}')
+
+# Run the test
+test_international_access()
+```
+
+**Enhanced Error Handling for Regional Access Issues:**
+```python
+# Improved error handling for proxy and regional access
+class RegionalNewsFetcher:
+    def __init__(self):
+        self.proxy_enabled = False
+        self.warp_connected = False
+        
+    def setup_proxy(self):
+        """Setup Cloudflare WARP proxy service"""
+        try:
+            # Install and configure WARP
+            subprocess.run([
+                'sudo', 'apt-get', 'install', '-y', 'cloudflare-warp'
+            ], check=True, capture_output=True)
+            
+            # Start WARP service
+            subprocess.run([
+                'sudo', 'systemctl', 'start', 'warp-svc'
+            ], check=True)
+            
+            # Connect to WARP
+            subprocess.run([
+                'sudo', 'warp-cli', '--accept-tos', 'connect'
+            ], check=True)
+            
+            self.proxy_enabled = True
+            self.warp_connected = True
+            return True
+            
+        except subprocess.CalledProcessError as e:
+            print(f"WARP setup failed: {e}")
+            return False
+    
+    def test_connection(self, url):
+        """Test connection through proxy if available"""
+        try:
+            if self.proxy_enabled and self.warp_connected:
+                # Test through proxy
+                proxies = {
+                    'http': 'socks5://127.0.0.1:9050',
+                    'https': 'socks5://127.0.0.1:9050'
+                }
+                response = requests.get(url, proxies=proxies, timeout=10)
+            else:
+                # Direct connection
+                response = requests.get(url, timeout=10)
+            
+            return response.status_code == 200
+            
+        except Exception as e:
+            print(f"Connection test failed: {e}")
+            return False
+```
+
+### International News Source Access
+
+**Supported International Sources:**
+- **CNN**: https://www.cnn.com
+- **BBC News**: https://www.bbc.com/news
+- **Reuters**: https://www.reuters.com
+- **Associated Press**: https://apnews.com
+- **The Guardian**: https://www.theguardian.com
+- **Financial Times**: https://www.ft.com
+- **Bloomberg**: https://www.bloomberg.com
+- **NHK World**: https://www3.nhk.or.jp/nhkworld
+- **Al Jazeera**: https://www.aljazeera.com
+- **Los Angeles Times**: https://www.latimes.com
+
+**Regional Access Testing:**
+```javascript
+// JavaScript-based regional access testing
+function testRegionalAccess() {
+    const internationalSites = [
+        { name: 'CNN', url: 'https://www.cnn.com' },
+        { name: 'BBC', url: 'https://www.bbc.com/news' },
+        { name: 'Reuters', url: 'https://www.reuters.com' },
+        { name: 'Guardian', url: 'https://www.theguardian.com' }
+    ];
+    
+    internationalSites.forEach(site => {
+        fetch(site.url, { method: 'HEAD', timeout: 10000 })
+            .then(response => {
+                console.log(`${site.name}: ${response.status}`);
+                updateSiteStatus(site.name, response.status);
+            })
+            .catch(error => {
+                console.log(`${site.name}: Failed - ${error.message}`);
+                updateSiteStatus(site.name, 'failed');
+            });
+    });
+}
+
+function updateSiteStatus(name, status) {
+    const statusElement = document.getElementById(`status-${name}`);
+    if (statusElement) {
+        statusElement.textContent = status;
+        statusElement.className = status === 'failed' ? 'status-failed' : 'status-success';
+    }
+}
+```
+
+**Section sources**
+- [.github/workflows/update-news.yml:41-64](file://.github/workflows/update-news.yml#L41-L64)
+- [test_connections.py:1-45](file://test_connections.py#L1-L45)
+- [scripts/fetch_news.py:63-67](file://scripts/fetch_news.py#L63-L67)
+
 ## Troubleshooting Guide
 
 ### Common Integration Issues
@@ -903,7 +1099,7 @@ class RobustNewsLoader {
     }
     
     async loadNewsWithRetry(url, retryCount = 0) {
-        try {
+        try:
             const response = await fetch(url, {
                 cache: 'no-cache',
                 headers: {
@@ -929,6 +1125,112 @@ class RobustNewsLoader {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 }
+```
+
+### Regional Access and Proxy Troubleshooting
+
+**Issue 5: Cloudflare WARP Connection Failures**
+
+**Symptoms:** International news sources fail to load despite proxy configuration
+
+**Solutions:**
+```bash
+# Manual WARP connection troubleshooting
+#!/bin/bash
+
+# Check WARP service status
+sudo systemctl status warp-svc
+
+# Restart WARP service
+sudo systemctl restart warp-svc
+
+# Check WARP connection
+sudo warp-cli status
+
+# Force reconnect
+sudo warp-cli disconnect
+sudo warp-cli connect
+
+# Test proxy connectivity
+curl -x socks5://127.0.0.1:9050 https://www.cnn.com
+```
+
+**Issue 6: Proxy Authentication Issues**
+
+**Symptoms:** Proxy authentication failures or connection timeouts
+
+**Solutions:**
+```python
+# Enhanced proxy configuration with fallback
+class EnhancedProxyConfig:
+    def __init__(self):
+        self.proxies = [
+            {
+                'http': 'socks5://127.0.0.1:9050',
+                'https': 'socks5://127.0.0.1:9050'
+            },
+            {
+                'http': 'http://127.0.0.1:8080',
+                'https': 'http://127.0.0.1:8080'
+            },
+            None  # Direct connection as fallback
+        ]
+        
+    def test_proxies(self):
+        """Test multiple proxy configurations"""
+        for i, proxy_config in enumerate(self.proxies):
+            try:
+                if proxy_config:
+                    response = requests.get(
+                        'https://www.cnn.com', 
+                        proxies=proxy_config, 
+                        timeout=15
+                    )
+                else:
+                    response = requests.get('https://www.cnn.com', timeout=15)
+                
+                if response.status_code == 200:
+                    print(f"Proxy {i+1} successful")
+                    return proxy_config
+            except:
+                print(f"Proxy {i+1} failed")
+                continue
+                
+        return None
+```
+
+**Issue 7: GitHub Actions Proxy Configuration**
+
+**Symptoms:** CI/CD pipeline fails to access international sources
+
+**Solutions:**
+```yaml
+# Enhanced GitHub Actions workflow with proxy fallback
+- name: Install and connect Cloudflare WARP
+  run: |
+    # Install proxychains-ng
+    sudo apt-get install -y proxychains-ng
+    
+    # Setup WARP with retry logic
+    for i in {1..3}; do
+      sudo apt-get update && sudo apt-get install -y cloudflare-warp && break || echo "Retry $i"
+      sleep 5
+    done
+    
+    # Start WARP service
+    sudo systemctl start warp-svc
+    sleep 3
+    
+    # Connect with TOS acceptance
+    sudo warp-cli --accept-tos registration new
+    sudo warp-cli --accept-tos connect
+    sleep 10
+    
+    # Verify connection
+    if ! curl -s https://www.cloudflare.com/cdn-cgi/trace/ | grep -q "warp=on"; then
+      echo "WARP connection failed, attempting direct access"
+      # Continue with direct access for local development
+    fi
 ```
 
 ### Debugging Tools
@@ -985,6 +1287,8 @@ function monitorNewsRequests() {
 **Section sources**
 - [index.html:282-295](file://index.html#L282-L295)
 - [brief.html:381-399](file://brief.html#L381-L399)
+- [.github/workflows/update-news.yml:41-64](file://.github/workflows/update-news.yml#L41-L64)
+- [test_connections.py:1-45](file://test_connections.py#L1-L45)
 
 ## Performance Optimization
 
@@ -1211,15 +1515,18 @@ class IntelligentCache {
 
 The Daily News system provides a comprehensive solution for integrating automated news feeds into existing websites and applications. With three distinct integration methods, extensive customization options, and robust technical architecture, it can accommodate diverse website requirements and technical constraints.
 
+**Updated** The system now includes advanced Cloudflare WARP proxy service integration, enabling reliable access to international news sources from regions with restricted internet access. This enhancement ensures comprehensive coverage of global news while maintaining the system's modular design and flexibility.
+
 The system's strength lies in its modular design, which allows for flexible deployment strategies while maintaining full functionality. Whether you choose standalone deployment, iframe embedding, or subdirectory integration, the platform provides consistent performance and reliable data delivery.
 
 Key advantages of the integration approach include:
 - **Seamless Integration:** Minimal disruption to existing website architecture
 - **Customizable Design:** Extensive CSS customization options for brand alignment
 - **Robust Performance:** Optimized loading strategies and caching mechanisms
+- **Global Access:** Cloudflare WARP proxy service ensures international news source availability
 - **Future-Proof:** Automated updates via GitHub Actions ensure fresh content
 - **Developer-Friendly:** Clear API patterns and comprehensive documentation
 
-For successful implementation, organizations should carefully evaluate their technical requirements, choose the appropriate integration method, and implement the recommended customization patterns to achieve optimal user experience and brand consistency.
+For successful implementation, organizations should carefully evaluate their technical requirements, choose the appropriate integration method, implement the recommended customization patterns, and consider the regional access capabilities provided by the Cloudflare WARP proxy service.
 
 The system's commitment to accessibility, performance optimization, and third-party integrations ensures it can grow with evolving web standards and user expectations while maintaining reliability and ease of maintenance.
