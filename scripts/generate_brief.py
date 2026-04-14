@@ -129,8 +129,16 @@ class AIBriefGenerator:
             return False
         
         # Check for payment/balance errors by making a test request
-        base_url = os.getenv(config.get('base_url_env', ''), config.get('base_url_default', config['base_url']))
-        model = os.getenv(config.get('model_env', ''), config.get('model_default', config['model']))
+        # Handle both direct base_url and env-based configuration
+        if 'base_url_env' in config:
+            base_url = os.getenv(config['base_url_env'], config.get('base_url_default', ''))
+        else:
+            base_url = config['base_url']
+        
+        if 'model_env' in config:
+            model = os.getenv(config['model_env'], config.get('model_default', ''))
+        else:
+            model = config['model']
         
         headers = config['headers'](api_key)
         
