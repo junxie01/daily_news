@@ -16,14 +16,11 @@
 
 ## Update Summary
 **Changes Made**
-- Enhanced GitHub Actions workflow with Cloudflare WARP proxy integration for international news access
-- Added comprehensive AI-powered news analysis and personalization capabilities
-- Improved permissions management with write access to repository contents, GitHub Pages, and ID tokens
-- Enhanced deployment pipeline with dual data file management and robust error handling
-- Updated HTML rendering to support AI-generated content with dynamic fallback mechanisms
-- **Updated**: Cloudflare WARP service installation, configuration, and network connectivity testing in workflow
-- **Updated**: Enhanced AI brief generation with multiple provider support and fallback mechanisms
-- **Updated**: Improved manual deployment script with conflict resolution for both datasets
+- Enhanced GitHub Actions workflow with new models: read permission to enable GitHub Models API access for AI-powered news processing capabilities
+- Integrated GitHub Models API as a free-tier AI provider option with Azure OpenAI-compatible endpoint
+- Updated AI brief generation to support GitHub Models as the default provider with automatic fallback to other providers
+- Enhanced workflow permissions to include models: read for GitHub Models API access
+- Updated documentation to reflect the new GitHub Models integration and provider configuration options
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -43,10 +40,10 @@ This document explains the deployment and automation system for the daily news p
 ## Project Structure
 The repository is organized around an enhanced GitHub Actions workflow, Python news fetching and AI generation scripts, static HTML pages, and JSON datasets. The key elements for deployment and automation are:
 
-- Enhanced workflow definition under .github/workflows/update-news.yml with Cloudflare WARP integration
+- Enhanced workflow definition under .github/workflows/update-news.yml with Cloudflare WARP integration and GitHub Models API access
 - Manual deployment script push.sh with dual data file handling
 - News fetching logic in scripts/fetch_news.py with international news support
-- AI brief generation in scripts/generate_brief.py with multiple provider support
+- AI brief generation in scripts/generate_brief.py with multiple provider support including GitHub Models
 - Static pages index.html and brief.html with AI content rendering
 - Datasets data/news.json and data/brief.json
 - Dependencies in requirements.txt
@@ -87,7 +84,7 @@ S --> R
 - [push.sh:1-73](file://push.sh#L1-L73)
 
 **Section sources**
-- [update-news.yml:1-124](file://.github/workflows/update-news.yml#L1-L124)
+- [update-news.yml:1-125](file://.github/workflows/update-news.yml#L1-L125)
 - [requirements.txt:1-5](file://requirements.txt#L1-L5)
 - [fetch_news.py:1-2222](file://scripts/fetch_news.py#L1-L2222)
 - [generate_brief.py:1-364](file://scripts/generate_brief.py#L1-L364)
@@ -99,15 +96,15 @@ S --> R
 - [test_connections.py:1-45](file://test_connections.py#L1-L45)
 
 ## Core Components
-- **Enhanced automated workflow**: A scheduled GitHub Actions job that checks out the repo, sets up Python, installs dependencies, installs and configures Cloudflare WARP for international access, runs the news fetcher, generates AI briefs, and commits/pushes changes to both datasets.
+- **Enhanced automated workflow**: A scheduled GitHub Actions job that checks out the repo, sets up Python, installs dependencies, installs and configures Cloudflare WARP for international access, runs the news fetcher, generates AI briefs using GitHub Models API, and commits/pushes changes to both datasets.
 - **Manual deployment script**: An enhanced Bash script that checks Git status, pulls remote changes with rebase, resolves conflicts for both news and brief datasets, and pushes updates.
 - **News fetcher**: A Python module that scrapes and aggregates news from domestic and international sources, writes structured data to data/news.json with metadata and computed scores.
-- **AI brief generator**: A Python module that analyzes news data using multiple AI providers (DeepSeek, OpenAI, Moonshot, Qwen) to generate personalized research-focused briefs.
+- **AI brief generator**: A Python module that analyzes news data using multiple AI providers (GitHub Models, DeepSeek, OpenAI, Moonshot, Qwen) to generate personalized research-focused briefs.
 - **Static pages**: HTML pages that render the latest datasets from data/news.json and data/brief.json with AI content support.
 - **Dependencies**: Python packages required for scraping, parsing, AI integration, and proxy configuration.
 
 **Section sources**
-- [update-news.yml:21-124](file://.github/workflows/update-news.yml#L21-L124)
+- [update-news.yml:21-125](file://.github/workflows/update-news.yml#L21-L125)
 - [push.sh:1-73](file://push.sh#L1-L73)
 - [fetch_news.py:12-25](file://scripts/fetch_news.py#L12-L25)
 - [generate_brief.py:30-60](file://scripts/generate_brief.py#L30-L60)
@@ -119,7 +116,7 @@ S --> R
 
 ## Architecture Overview
 The deployment pipeline consists of two primary paths with enhanced capabilities:
-- **Automated path**: GitHub Actions schedules a daily run, installs Cloudflare WARP for international access, executes both news fetching and AI brief generation, and commits/pushes changes to both datasets.
+- **Automated path**: GitHub Actions schedules a daily run, installs Cloudflare WARP for international access, executes both news fetching and AI brief generation using GitHub Models API, and commits/pushes changes to both datasets.
 - **Manual path**: A developer runs push.sh locally to sync, resolve conflicts for both datasets, and push updates.
 
 ```mermaid
@@ -129,6 +126,7 @@ participant Actions as "GitHub Actions Runner"
 participant WARP as "Cloudflare WARP Service"
 participant Fetcher as "fetch_news.py"
 participant BriefGen as "generate_brief.py"
+participant GitHubModels as "GitHub Models API"
 participant NewsData as "data/news.json"
 participant BriefData as "data/brief.json"
 participant VCS as "Git (Commit/Push)"
@@ -141,13 +139,15 @@ Actions->>Actions : "Install dependencies"
 Actions->>Fetcher : "Execute fetch_news.py"
 Fetcher->>NewsData : "Generate/Update dataset"
 Actions->>BriefGen : "Execute generate_brief.py"
+BriefGen->>GitHubModels : "Call GitHub Models API"
+GitHubModels-->>BriefGen : "AI-generated brief"
 BriefGen->>BriefData : "Generate/Update AI brief"
 Actions->>VCS : "Commit data/news.json and data/brief.json"
 VCS-->>Actions : "Success"
 ```
 
 **Diagram sources**
-- [update-news.yml:3-124](file://.github/workflows/update-news.yml#L3-L124)
+- [update-news.yml:3-125](file://.github/workflows/update-news.yml#L3-L125)
 - [fetch_news.py:1-2222](file://scripts/fetch_news.py#L1-L2222)
 - [generate_brief.py:1-364](file://scripts/generate_brief.py#L1-L364)
 - [news.json:1-2048](file://data/news.json#L1-L2048)
@@ -158,7 +158,7 @@ VCS-->>Actions : "Success"
 
 ### Enhanced Automated Workflow (.github/workflows/update-news.yml)
 - **Triggers**: Scheduled at UTC 23:00 (Beijing time 07:00) and supports manual dispatch and push triggers.
-- **Permissions**: Enhanced with read/write permissions for contents, pages, and ID tokens.
+- **Permissions**: Enhanced with read/write permissions for contents, pages, and ID tokens, plus models: read for GitHub Models API access.
 - **Concurrency**: Grouped under "pages" with progress cancellation disabled.
 - **Jobs**: Two-stage pipeline with update job and deploy job.
 - **Steps**:
@@ -167,7 +167,7 @@ VCS-->>Actions : "Success"
   - Install pip and dependencies from requirements.txt.
   - **New**: Install and configure Cloudflare WARP for international news access with proxy configuration.
   - Run the news fetching script with proxy support.
-  - **New**: Generate AI brief using configurable providers (DeepSeek, OpenAI, Moonshot, Qwen).
+  - **New**: Generate AI brief using configurable providers including GitHub Models API as the default provider.
   - Commit and push changes with a generated message, targeting both data/news.json and data/brief.json.
 
 ```mermaid
@@ -179,17 +179,17 @@ S3 --> S4["Install dependencies"]
 S4 --> S5["Install and connect Cloudflare WARP"]
 S5 --> S6["Configure HTTP/HTTPS Proxy"]
 S6 --> S7["Run fetch_news.py"]
-S7 --> S8["Run generate_brief.py<br/>with AI providers"]
+S7 --> S8["Run generate_brief.py<br/>with GitHub Models API"]
 S8 --> S9["Commit data/news.json<br/>and data/brief.json"]
 S9 --> S10["Deploy to GitHub Pages"]
 S10 --> End(["Completed"])
 ```
 
 **Diagram sources**
-- [update-news.yml:3-124](file://.github/workflows/update-news.yml#L3-L124)
+- [update-news.yml:3-125](file://.github/workflows/update-news.yml#L3-L125)
 
 **Section sources**
-- [update-news.yml:1-124](file://.github/workflows/update-news.yml#L1-L124)
+- [update-news.yml:1-125](file://.github/workflows/update-news.yml#L1-L125)
 
 ### Enhanced Manual Deployment Script (push.sh)
 - **Purpose**: Local/emergency deployment to synchronize with remote, handle conflicts for both news and brief datasets, and push changes.
@@ -269,14 +269,14 @@ class NewsFetcher {
 - [news.json:1-2048](file://data/news.json#L1-L2048)
 
 ### AI Brief Generator (scripts/generate_brief.py)
-- **New Component**: AI-powered news analysis and personalization system.
+- **New Component**: AI-powered news analysis and personalization system with GitHub Models API integration.
 - **Capabilities**:
-  - Supports multiple AI providers (DeepSeek, OpenAI, Moonshot, Qwen).
+  - Supports multiple AI providers including GitHub Models (free for GitHub Actions), DeepSeek, OpenAI, Moonshot, Qwen.
   - Loads news data from data/news.json and generates comprehensive analysis.
   - Creates personalized briefs for research scholars with actionable insights.
-  - Handles API authentication and fallback configurations.
+  - Handles API authentication and fallback configurations with GitHub Models as the default provider.
   - Generates structured JSON output with metadata and analysis sections.
-  - **New**: Integrates with environment variables for provider configuration.
+  - **New**: Integrates with GitHub Models API using Azure OpenAI-compatible endpoint and GITHUB_TOKEN for authentication.
 - **Output**: Creates data/brief.json with four main sections (Headline, Research Funding, Learning Tracks, Knowledge Expansion) plus metadata.
 
 ```mermaid
@@ -342,9 +342,10 @@ F["Fallback Mechanism"] --> C
 - **Enhanced workflow depends on**:
   - Python runtime and dependencies installed from requirements.txt.
   - scripts/fetch_news.py to produce data/news.json with international news support.
-  - scripts/generate_brief.py to produce data/brief.json with AI integration.
+  - scripts/generate_brief.py to produce data/brief.json with AI integration including GitHub Models API.
   - Git operations to commit and push changes to both datasets.
   - **New**: Cloudflare WARP service for international news access.
+  - **New**: GitHub Models API access enabled by models: read permission.
 - **Enhanced manual script depends on**:
   - Git CLI and SSH access to the remote repository.
   - Local presence of both data/news.json and data/brief.json to resolve conflicts.
@@ -356,6 +357,7 @@ W --> R["requirements.txt"]
 W --> F["scripts/fetch_news.py"]
 W --> G["scripts/generate_brief.py"]
 W --> WARP["Cloudflare WARP Service"]
+W --> GM["GitHub Models API"]
 F --> DN["data/news.json"]
 G --> DB["data/brief.json"]
 W --> GP["GitHub Pages deployment"]
@@ -365,7 +367,7 @@ S --> DB
 ```
 
 **Diagram sources**
-- [update-news.yml:18-124](file://.github/workflows/update-news.yml#L18-L124)
+- [update-news.yml:18-125](file://.github/workflows/update-news.yml#L18-L125)
 - [requirements.txt:1-5](file://requirements.txt#L1-L5)
 - [fetch_news.py:1-2222](file://scripts/fetch_news.py#L1-L2222)
 - [generate_brief.py:1-364](file://scripts/generate_brief.py#L1-L364)
@@ -375,7 +377,7 @@ S --> DB
 - [push.sh:1-73](file://push.sh#L1-L73)
 
 **Section sources**
-- [update-news.yml:18-124](file://.github/workflows/update-news.yml#L18-L124)
+- [update-news.yml:18-125](file://.github/workflows/update-news.yml#L18-L125)
 - [requirements.txt:1-5](file://requirements.txt#L1-L5)
 - [fetch_news.py:1-2222](file://scripts/fetch_news.py#L1-L2222)
 - [generate_brief.py:1-364](file://scripts/generate_brief.py#L1-L364)
@@ -386,11 +388,12 @@ S --> DB
 
 ## Performance Considerations
 - **Network resilience**: The fetcher retries failed HTTP requests and parses multiple time formats to improve reliability.
-- **AI API optimization**: The brief generator supports multiple providers with configurable models and fallback mechanisms.
+- **AI API optimization**: The brief generator supports multiple providers with configurable models and fallback mechanisms, including GitHub Models API as a cost-effective option.
 - **Data volume**: The system now manages two datasets (news and brief) - consider pagination or incremental updates if growth becomes significant.
 - **Build time**: The workflow installs dependencies each run; caching could reduce latency if the dependency set stabilizes.
 - **Concurrency**: The scheduler runs once daily; avoid overlapping jobs to prevent resource contention.
 - **API costs**: AI brief generation incurs API costs - configure appropriate provider limits and fallback strategies.
+- **New**: **GitHub Models API benefits**: Free tier access for GitHub Actions runners with Azure OpenAI-compatible endpoint.
 - **New**: **WARP service overhead**: Cloudflare WARP adds initial setup time but enables access to international news sources.
 
 ## Troubleshooting Guide
@@ -409,6 +412,7 @@ Common issues and resolutions:
   - Verify AI API keys are configured in GitHub Secrets.
   - Check provider availability and rate limits.
   - Review API response handling and error logging.
+  - **New**: For GitHub Models API issues, verify models: read permission is set in workflow.
 
 - **Cloudflare WARP connection issues**
   - **New**: Verify WARP installation and service startup.
@@ -429,14 +433,19 @@ Common issues and resolutions:
   - Use test_connections.py to probe target sites and adjust headers if needed.
   - **New**: Verify WARP proxy is properly configured for international access.
 
+- **GitHub Models API authentication issues**
+  - **New**: Ensure models: read permission is included in workflow permissions.
+  - Verify GITHUB_TOKEN is available in workflow environment.
+  - Check that DEFAULT_AI_PROVIDER is set to github_models or left unset for default behavior.
+
 **Section sources**
-- [update-news.yml:13-124](file://.github/workflows/update-news.yml#L13-L124)
+- [update-news.yml:13-125](file://.github/workflows/update-news.yml#L13-L125)
 - [push.sh:27-53](file://push.sh#L27-L53)
 - [generate_brief.py:57-58](file://scripts/generate_brief.py#L57-L58)
 - [test_connections.py:1-45](file://test_connections.py#L1-L45)
 
 ## Conclusion
-The enhanced deployment and automation system combines a reliable GitHub Actions workflow with Cloudflare WARP integration for international news access, AI-powered personalization, and a practical manual script to keep both the news dataset and AI-generated briefs fresh and the pages updated. The addition of AI brief generation provides valuable personalized insights for research scholars while maintaining the robust automated pipeline. By following the configuration and troubleshooting guidance here, teams can maintain a stable, observable, and customizable deployment pipeline with advanced AI capabilities and global news access.
+The enhanced deployment and automation system combines a reliable GitHub Actions workflow with Cloudflare WARP integration for international news access, AI-powered personalization using GitHub Models API, and a practical manual script to keep both the news dataset and AI-generated briefs fresh and the pages updated. The addition of GitHub Models API integration provides cost-effective AI capabilities for GitHub Actions runners while maintaining the robust automated pipeline. By following the configuration and troubleshooting guidance here, teams can maintain a stable, observable, and customizable deployment pipeline with advanced AI capabilities and global news access.
 
 ## Appendices
 
@@ -450,7 +459,7 @@ The enhanced deployment and automation system combines a reliable GitHub Actions
   - Static pages automatically detect and render AI-generated content with fallback mechanisms.
 
 **Section sources**
-- [update-news.yml:97-124](file://.github/workflows/update-news.yml#L97-L124)
+- [update-news.yml:97-125](file://.github/workflows/update-news.yml#L97-L125)
 
 ### B. Setting Up GitHub Actions Secrets
 - **Navigate to repository Settings > Secrets and variables > Actions**.
@@ -459,12 +468,13 @@ The enhanced deployment and automation system combines a reliable GitHub Actions
   - `OPENAI_API_KEY`: OpenAI API key  
   - `MOONSHOT_API_KEY`: Moonshot API key
   - `QWEN_API_KEY`: Qwen API key
+  - **New**: `OPENROUTER_API_KEY`: OpenRouter API key (for free tier)
+  - **New**: `GITHUB_TOKEN`: GitHub Models token (free for GitHub Actions)
 - **Optional configuration**:
-  - `DEFAULT_AI_PROVIDER`: Default provider (deepseek, openai, moonshot, qwen)
+  - `DEFAULT_AI_PROVIDER`: Default provider (github_models, deepseek, openai, moonshot, qwen)
   - `DEEPSEEK_BASE_URL`, `OPENAI_BASE_URL`, `MOONSHOT_BASE_URL`, `QWEN_BASE_URL`: Custom endpoints
   - `DEEPSEEK_MODEL`, `OPENAI_MODEL`, `MOONSHOT_MODEL`, `QWEN_MODEL`: Model specifications
   - `OPENROUTER_API_KEY`: OpenRouter API key (for free tier)
-  - `GITHUB_TOKEN`: GitHub Models token (free for GitHub Actions)
 - **New**: WARP configuration secrets:
   - `WARP_REGISTRATION_TOKEN`: Cloudflare WARP registration token
   - `WARP_ACCOUNT_ID`: Cloudflare account identifier
@@ -497,7 +507,7 @@ The enhanced deployment and automation system combines a reliable GitHub Actions
 - **Consider CDN deployment** for improved performance and global distribution.
 
 **Section sources**
-- [update-news.yml:97-124](file://.github/workflows/update-news.yml#L97-L124)
+- [update-news.yml:97-125](file://.github/workflows/update-news.yml#L97-L125)
 
 ### F. Rollback Procedures
 - **Use Git history to revert problematic commits** and redeploy.
@@ -515,8 +525,9 @@ The enhanced deployment and automation system combines a reliable GitHub Actions
 - **Monitor AI API costs and implement rate limiting**.
 - **Implement fallback strategies for AI provider failures**.
 - **Test both news and brief data rendering** in staging environments.
-- **New**: Monitor WARP service health and proxy configuration.
+- **New**: Monitor GitHub Models API availability and usage patterns.
 - **New**: Regularly test international news access through WARP.
+- **New**: Verify GitHub Models API permissions are properly configured.
 
 ### H. AI Brief Generation Configuration
 - **Provider selection**: Configure DEFAULT_AI_PROVIDER in GitHub Secrets.
@@ -524,22 +535,35 @@ The enhanced deployment and automation system combines a reliable GitHub Actions
 - **Model customization**: Adjust model parameters per provider requirements.
 - **Fallback mechanisms**: Implement provider failover for reliability.
 - **Cost optimization**: Monitor API usage and implement quotas.
+- **New**: GitHub Models API configuration: Uses GITHUB_TOKEN with Azure OpenAI-compatible endpoint.
 
 **Section sources**
 - [generate_brief.py:36-55](file://scripts/generate_brief.py#L36-L55)
 - [update-news.yml:70-91](file://.github/workflows/update-news.yml#L70-L91)
 
-### I. Cloudflare WARP Integration Configuration
+### I. GitHub Models API Integration
+- **Permission requirement**: The workflow requires `models: read` permission to access GitHub Models API.
+- **Authentication**: Uses GITHUB_TOKEN environment variable for authentication.
+- **Endpoint configuration**: Azure OpenAI-compatible endpoint at `https://models.inference.ai.azure.com`.
+- **Default provider**: GitHub Models is set as the default provider with automatic fallback to other providers.
+- **Free tier benefits**: Available at no cost for GitHub Actions runners.
+
+**Section sources**
+- [update-news.yml:12-16](file://.github/workflows/update-news.yml#L12-L16)
+- [update-news.yml:72-91](file://.github/workflows/update-news.yml#L72-L91)
+- [generate_brief.py:32-42](file://scripts/generate_brief.py#L32-L42)
+
+### J. Cloudflare WARP Integration Configuration
 - **Service Installation**: The workflow automatically installs and configures Cloudflare WARP.
 - **Proxy Configuration**: WARP service is configured to use port 8080 for HTTP/HTTPS proxy.
 - **Connection Testing**: The workflow verifies WARP connection and tests international site access.
 - **Network Access**: Enables access to international news sources that may be blocked regionally.
 
 **Section sources**
-- [update-news.yml:41-67](file://.github/workflows/update-news.yml#L41-L67)
+- [update-news.yml:42-66](file://.github/workflows/update-news.yml#L42-L66)
 - [test_connections.py:1-45](file://test_connections.py#L1-L45)
 
-### J. Network Connectivity Testing
+### K. Network Connectivity Testing
 - **Comprehensive site testing**: The system includes test_connections.py to verify access to major international news sources.
 - **Multi-site validation**: Tests BBC, CNN, NYTimes, Reuters, Guardian, FT, Bloomberg, NHK World, Al Jazeera, and other major outlets.
 - **Header configuration**: Uses realistic browser headers to mimic legitimate traffic.

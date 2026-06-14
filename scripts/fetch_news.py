@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 import time
 import random
+import re
+from urllib.parse import urljoin, urlparse
 
 class NewsFetcher:
     def __init__(self):
@@ -155,10 +157,54 @@ class NewsFetcher:
         if '<![CDATA[' in title and ']]>' in title:
             title = title.replace('<![CDATA[', '').replace(']]>', '')
         # 移除HTML标签
-        title = ''.join(BeautifulSoup(title, 'lxml').stripped_strings)
+        if '<' in title and '>' in title:
+            title = ''.join(BeautifulSoup(title, 'lxml').stripped_strings)
         return title.strip()
 
-    def is_valid_title(self, title):
+    def extract_content_from_soup(self, soup):
+        """从详情页提取一段可展示的正文或摘要。"""
+        for elem in soup(['script', 'style', 'noscript']):
+            elem.decompose()
+
+        meta_selectors = [
+            'meta[name="description"]',
+            'meta[property="og:description"]',
+            'meta[name="twitter:description"]',
+        ]
+        for selector in meta_selectors:
+            meta = soup.select_one(selector)
+            if meta and meta.get('content'):
+                content = ' '.join(meta.get('content', '').split())
+                if len(content) >= 20:
+                    return content[:1000]
+
+        content_selectors = [
+            'article',
+            '.article-content',
+            '.article_body',
+            '.article-body',
+            '.post-content',
+            '.entry-content',
+            '.content',
+            '.storytext',
+            'main',
+        ]
+        for selector in content_selectors:
+            container = soup.select_one(selector)
+            if not container:
+                continue
+            paragraphs = [
+                ' '.join(p.get_text(' ', strip=True).split())
+                for p in container.find_all('p')
+            ]
+            paragraphs = [p for p in paragraphs if len(p) >= 20]
+            content = '\n\n'.join(paragraphs)
+            if len(content) >= 40:
+                return content[:1500]
+
+        return ''
+
+    def is_valid_title(self, title, source_name=None):
         # 清理标题
         title = self.clean_title(title)
         
@@ -181,13 +227,30 @@ class NewsFetcher:
         if title in invalid_keywords:
             return False
         
-        if any(keyword in title for keyword in invalid_keywords):
+        foreign_sources = {'CNN', 'AP新闻', 'NHK世界', '洛杉矶时报'}
+        if source_name not in foreign_sources and any(keyword in title for keyword in invalid_keywords):
             return False
         
-        # 过滤纯英文标题（可选）
-        if title.isascii() and not any(c.isalpha() for c in title if ord(c) > 127):
+        # 国内网页里常有英文导航项；国外来源需要允许英文新闻标题通过。
+        if title.isascii() and source_name not in foreign_sources:
             return False
         
+        return True
+
+    def is_likely_article_url(self, url, source_name):
+        path = urlparse(url).path
+        current_year = datetime.now().year
+        recent_year_pattern = rf'(?:{current_year}|{current_year - 1})'
+
+        if source_name == 'CNN':
+            return bool(re.search(rf'/{recent_year_pattern}/\d{{2}}/\d{{2}}/', path))
+        if source_name == 'AP新闻':
+            return path.startswith('/article/') or path.startswith('/photo-gallery/')
+        if source_name == 'NHK世界':
+            return '/news/' in path and path.endswith('.html')
+        if source_name == '洛杉矶时报':
+            return bool(re.search(rf'/story/{recent_year_pattern}-\d{{2}}-\d{{2}}/', path))
+
         return True
 
     def fetch_web_page(self, source_info):
@@ -1629,19 +1692,20 @@ class NewsFetcher:
             
             links = soup.find_all('a', href=True)
             news_count = 0
+            foreign_sources = {'CNN', 'AP新闻', 'NHK世界', '洛杉矶时报'}
+            scan_limit = 500 if source_info['name'] in foreign_sources else 30
             
-            for link in links[:30]:
+            for link in links[:scan_limit]:
                 try:
-                    title = link.get_text(strip=True)
-                    if not title or not self.is_valid_title(title):
+                    title = self.clean_title(link.get_text(strip=True))
+                    if not title or not self.is_valid_title(title, source_info['name']):
                         continue
                     
-                    href = link['href']
+                    href = urljoin(source_info['url'], link['href'])
                     if not href.startswith('http'):
-                        if href.startswith('/'):
-                            href = source_info['url'].rstrip('/') + href
-                        else:
-                            continue
+                        continue
+                    if not self.is_likely_article_url(href, source_info['name']):
+                        continue
                     
                     # 对于每个链接，尝试获取其所在上下文中的时间
                     publish_time = page_publish_time
@@ -1709,12 +1773,14 @@ class NewsFetcher:
                         print(f'Skipping invalid link: {href}')
                         continue
                     
-                    # 尝试从详情页面提取发布时间
+                    detail_content = ''
+                    # 尝试从详情页面提取发布时间和摘要
                     try:
                         # 访问详情页面
                         detail_response = self.get_with_retry(href, timeout=5)
                         if detail_response:
                             detail_soup = BeautifulSoup(detail_response.text, 'lxml')
+                            detail_content = self.extract_content_from_soup(detail_soup)
                             # 尝试从详情页面提取时间
                             detail_time = extract_publish_time(detail_soup, source_info["name"])
                             # 检查提取的时间是否合理（不早于一年前）
@@ -1746,7 +1812,7 @@ class NewsFetcher:
                         'forwards': random.randint(5, 2000),
                         'favorites': random.randint(20, 3000),
                         
-                        'content': '',
+                        'content': detail_content,
                     }
                     self.news_list.append(news)
                     news_count += 1
