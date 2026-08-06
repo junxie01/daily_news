@@ -1,6 +1,6 @@
-# 热点资讯 + AI 新闻简报
+# 每日热点资讯
 
-一个自动抓取24小时热门资讯，并使用 AI 生成个性化新闻简报的网页应用。
+一个自动抓取并展示24小时热门资讯的网页应用。
 
 **在线访问**: https://www.seis-jun.xyz/daily_news/
 
@@ -10,12 +10,7 @@
 2. **智能去重聚合**：自动识别重复资讯，保留最早来源并聚合多平台数据
 3. **多维度热度评分**：基于浏览量、评论数、转发量、收藏数计算综合热度
 4. **交互式展示**：支持按热度/浏览量/评论数/转发量/收藏数排序，查看热门/冷门资讯
-5. **AI 新闻简报**：专为科研学者定制的 AI 深度分析，包含：
-   - 今日值得关注的新闻及趋势洞察
-   - 科研 funding 动态、学术机会、投资洞察
-   - 个性化学习路径和行动建议
-   - 相关知识扩展（定义、由来、趋势）
-6. **自动化更新**：GitHub Actions 每天自动抓取新闻并生成 AI 简报
+5. **自动化更新**：GitHub Actions 每天自动抓取新闻并部署网页，无需 AI API 或付费额度
 
 ## 快速开始
 
@@ -27,33 +22,18 @@
 pip install -r requirements.txt
 ```
 
-3. 配置环境变量（可选，用于 AI 简报）：
-```bash
-# 复制 .env.example 为 .env 并填写你的 API 密钥
-cp .env.example .env
-# 编辑 .env 文件，添加你的 Qwen/DeepSeek/OpenAI API 密钥
-```
-
-4. 运行爬虫：
+3. 运行爬虫：
 ```bash
 python scripts/fetch_news.py
 ```
 
-5. 生成 AI 简报（需要配置 API 密钥）：
-```bash
-python scripts/generate_brief.py
-```
-
-6. 打开 `index.html` 在浏览器中查看
+4. 打开 `index.html` 在浏览器中查看
 
 ### 部署到GitHub Pages
 
 1. 在GitHub上创建仓库
 2. 推送代码
 3. 启用GitHub Pages（Settings → Pages → Source 选择 GitHub Actions）
-4. 配置GitHub Secrets（用于 AI 简报）：
-   - `QWEN_API_KEY`：你的通义千问 API 密钥
-   - （可选）`DEFAULT_AI_PROVIDER`：默认 AI 提供商（qwen/deepseek/openai）
 
 ## GitHub Actions 自动更新
 
@@ -61,7 +41,6 @@ python scripts/generate_brief.py
 
 - 抓取最新资讯（从 40+ 新闻源）
 - 计算热度评分并去重
-- 调用 AI 生成个性化新闻简报
 - 自动提交并部署到网站
 
 也可以手动触发工作流（Actions → Update Hot News and Deploy → Run workflow）
@@ -74,14 +53,10 @@ daily_news/
 │   └── workflows/
 │       └── update-news.yml     # GitHub Actions 配置
 ├── scripts/
-│   ├── fetch_news.py           # 新闻爬虫脚本
-│   └── generate_brief.py       # AI 简报生成脚本
+│   └── fetch_news.py           # 新闻爬虫脚本
 ├── data/                       # 数据目录
-│   ├── news.json               # 新闻数据
-│   └── brief.json              # AI 生成的简报
+│   └── news.json               # 新闻数据
 ├── index.html                  # 热点资讯主页
-├── brief.html                  # AI 新闻简报页面
-├── .env                        # 环境变量（本地使用，不提交）
 ├── requirements.txt            # Python 依赖
 └── README.md                   # 说明文档
 ```
@@ -92,9 +67,8 @@ daily_news/
 
 ### 方式1：独立页面（推荐）
 1. Fork 本仓库
-2. 配置 GitHub Secrets（QWEN_API_KEY）
-3. 启用 GitHub Pages
-4. 在您的网站添加链接指向该地址
+2. 启用 GitHub Pages
+3. 在您的网站添加链接指向该地址
 
 ### 方式2：子目录集成
 1. 在您的网站仓库中创建 `daily_news/` 子目录
@@ -181,16 +155,6 @@ web_sources = [
     # ... 其他来源
 ]
 ```
-
-### 切换 AI 提供商
-
-支持以下 AI 提供商：
-- **通义千问 (Qwen)**：推荐，国内访问稳定（默认）
-- **DeepSeek**：性价比高
-- **OpenAI**：GPT-4o-mini 等模型
-- **Moonshot (Kimi)**：国内大模型
-
-修改 `.env` 文件或 GitHub Secrets 中的 `DEFAULT_AI_PROVIDER` 切换提供商。
 
 ## 许可证
 
