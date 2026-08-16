@@ -67,7 +67,7 @@ class NewsFetcher:
         return hashlib.md5(title.encode('utf-8')).hexdigest()
 
     def _extract_rss_image(self, item):
-        """从 RSS item 提取缩略图（media:thumbnail / enclosure）。"""
+        """从 RSS item 提取缩略图（media:thumbnail / enclosure），仅用于有真实配图的趣闻源。"""
         try:
             for tag in item.find_all():
                 if 'thumbnail' in tag.name.lower():
@@ -77,16 +77,6 @@ class NewsFetcher:
             enc = item.find('enclosure')
             if enc and enc.get('url') and str(enc.get('type', '')).startswith('image'):
                 return enc.get('url')
-        except Exception:
-            pass
-        return ''
-
-    def _extract_og_image(self, soup):
-        """从网页提取 og:image 作为缩略图。"""
-        try:
-            og = soup.select_one('meta[property="og:image"]')
-            if og and og.get('content'):
-                return og.get('content')
         except Exception:
             pass
         return ''
@@ -1816,7 +1806,6 @@ class NewsFetcher:
                         'comments': 0,
                         'forwards': 0,
                         'favorites': 0,
-                        'image': self._extract_og_image(soup),
                         'content': detail_content,
                     }
                     self.news_list.append(news)
@@ -1867,7 +1856,6 @@ class NewsFetcher:
                             'comments': story.get('descendants', 0),
                             'forwards': 0,
                             'favorites': story.get('score', 0),
-                            'image': '',
 
                             'content': story.get('text', '')
                         }
@@ -1906,15 +1894,6 @@ class NewsFetcher:
                         publish_time = datetime.fromtimestamp(post_data['created_utc'])
                         if datetime.now() - publish_time > timedelta(hours=24):
                             continue
-                        # 缩略图：thumbnail 字段优先，否则取 preview 首图
-                        image = ''
-                        thumb = post_data.get('thumbnail')
-                        if isinstance(thumb, str) and thumb.startswith('http'):
-                            image = thumb
-                        else:
-                            previews = post_data.get('preview', {}).get('images', [])
-                            if previews and previews[0].get('source', {}).get('url'):
-                                image = previews[0]['source']['url']
                         news = {
                             'id': self.get_hash(title),
                             'title': title,
@@ -1925,7 +1904,8 @@ class NewsFetcher:
                             'comments': post_data.get('num_comments', 0),
                             'forwards': 0,
                             'favorites': post_data.get('score', 0),
-                            'image': image,
+                            'image': (post_data.get('thumbnail') if isinstance(post_data.get('thumbnail'), str) and post_data['thumbnail'].startswith('http')
+                                      else (post_data.get('preview', {}).get('images', [{}])[0].get('source', {}).get('url', '') if post_data.get('preview', {}).get('images') else '')),
                             'content': post_data.get('selftext', '')
                         }
                         self.news_list.append(news)
@@ -1994,7 +1974,6 @@ class NewsFetcher:
                         'comments': target.get('answer_count', 0),
                         'forwards': 0,
                         'favorites': target.get('follower_count', 0),
-                        'image': '',
                         'content': target.get('excerpt', '')
                     }
                     self.news_list.append(news)

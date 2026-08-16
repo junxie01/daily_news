@@ -181,6 +181,16 @@
             line-height: 1.8;
         }
 
+        .news-detail-img {
+            display: block;
+            max-width: 100%;
+            max-height: 360px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin: 14px 0 4px;
+            background: #eee;
+        }
+
         .news-link {
             display: inline-block;
             margin-top: 15px;
@@ -217,37 +227,6 @@
 
         .news-title-wrapper {
             flex: 1;
-        }
-
-        .news-thumb-wrap {
-            position: relative;
-            width: 100%;
-            height: 180px;
-            margin-bottom: 12px;
-        }
-
-        .news-thumb-ph {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.2em;
-            font-weight: 700;
-            color: #fff;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 8px;
-            letter-spacing: 2px;
-        }
-
-        .news-thumb {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 8px;
-            background: #eee;
         }
 
         .archive-bar {
@@ -405,10 +384,6 @@
                 const item = document.createElement('div');
                 item.className = 'news-item';
                 item.innerHTML = `
-                    <div class="news-thumb-wrap">
-                        <div class="news-thumb-ph">${escapeHtml((news.source || '?').slice(0, 2))}</div>
-                        ${news.image ? `<img class="news-thumb" src="${escapeHtml(news.image)}" alt="" loading="lazy" onerror="this.remove()">` : ''}
-                    </div>
                     <div class="news-header">
                         <div class="rank-badge ${rank <= 3 ? 'rank-' + rank : ''}">${rank}</div>
                         <div class="news-title-wrapper">
@@ -454,6 +429,7 @@
                     </div>
                     <div class="news-detail" id="detail-${news.id}">
                         <div class="news-content">${escapeHtml(news.content) || '暂无详细内容'}</div>
+                        ${news.image ? `<img class="news-detail-img" data-src="${escapeHtml(news.image)}" alt="">` : ''}
                         ${news.url ? `<a href="${escapeHtml(news.url)}" class="news-link" target="_blank">查看原文链接</a>` : ''}
                     </div>
                 `;
@@ -461,6 +437,11 @@
                 item.addEventListener('click', () => {
                     const detail = document.getElementById(`detail-${news.id}`);
                     detail.classList.toggle('active');
+                    // 图片默认不加载，仅点击展开后才从源站拉取（保持列表轻量）
+                    const img = detail.querySelector('img.news-detail-img');
+                    if (img && img.dataset.src && !img.getAttribute('src')) {
+                        img.setAttribute('src', img.dataset.src);
+                    }
                 });
                 
                 container.appendChild(item);

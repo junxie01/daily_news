@@ -9,7 +9,7 @@
 1. **双栏资讯**：「趣新闻」（Reddit 趣味 subreddit、Hacker News、Atlas Obscura / Kottke / Mental Floss 等奇趣 RSS）与「硬新闻」（微博 / 百度 / 头条 / B站 / 抖音 / 知乎 中文热榜）分开抓取，网页顶部一键切换
 2. **智能去重聚合**：自动识别重复资讯，保留最早来源并聚合多平台数据
 3. **四维热度打分**：浏览量 / 评论数 / 转发量 / 收藏数 四个维度各按排名占 25%，合计满分 100（真实指标，不伪造）
-4. **缩略图 + 历史归档**：资讯带封面图（无图源用渐变占位块兜底）；每天快照存入 `data/archive/YYYY-MM-DD.json`，网页可翻看往期
+4. **轻量卡片 + 点击看大图 + 历史归档**：列表默认纯文字卡片（不预加载图片，体积小、加载快）；点开条目后才从源站加载配图（仅 RSS 趣闻源与 Reddit 有图，硬新闻不塞图避免 logo 噪音）；每天快照存入 `data/archive/YYYY-MM-DD.json`，网页可翻看往期
 5. **交互式展示**：支持按热度/浏览量/评论数/转发量/收藏数排序，并在「趣新闻 / 硬新闻」之间切换
 6. **自动化更新**：GitHub Actions 每天自动抓取新闻并部署网页，无需 AI API 或付费额度
 
@@ -93,11 +93,11 @@ daily_news/
 | Mental Floss | RSS | 冷知识百科 |
 | Damn Interesting | RSS | 猎奇历史 / 人物 |
 | Neatorama | RSS | 奇怪有趣事物聚合 |
-| Bored Panda | RSS | 轻松搞笑图文（带缩略图） |
+| Bored Panda | RSS | 轻松搞笑图文 |
 | 煎蛋 | RSS | 中文趣闻 / 无聊图 |
 | xkcd | RSS | 极客漫画 |
 | Hacker News | API | 科技 / 长见识，含真实评论数 |
-| Reddit（14 个趣闻 subreddit） | API | interestingasfuck / nextfuckinglevel / todayilearned / NotTheOnion / oddlysatisfying / DIY / woahdude …，含真实分数与缩略图 |
+| Reddit（14 个趣闻 subreddit） | API | interestingasfuck / nextfuckinglevel / todayilearned / NotTheOnion / oddlysatisfying / DIY / woahdude …，含真实分数 |
 
 **🔴 硬新闻（中文热榜）**
 
