@@ -219,6 +219,40 @@
             flex: 1;
         }
 
+        .news-thumb {
+            width: 100%;
+            max-height: 220px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background: #eee;
+        }
+
+        .archive-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .archive-label {
+            font-size: 0.95em;
+            color: #444;
+        }
+
+        .archive-bar select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.95em;
+            color: #333;
+            background: #fafafa;
+            cursor: pointer;
+        }
+
         footer {
             text-align: center;
             padding: 30px;
@@ -245,9 +279,9 @@
 <body>
     <div class="container">
         <header>
-            <h1>🔥 每日热点资讯</h1>
+            <h1>🎉 每日趣闻 · 全球猎奇</h1>
             <p class="update-time" id="updateTime">加载中...</p>
-            <p>要了解新闻大事看这个网页就够了，建议一天看一次吧，别老盯着。</p>
+            <p>每天帮你捞点好玩的、奇怪的、长见识的。一天看一次，别上头。</p>
         </header>
 
         <div class="controls">
@@ -263,13 +297,17 @@
                 <button class="active" data-view="top">最热门20条</button>
                 <button data-view="bottom">最冷门20条</button>
             </div>
+            <div class="archive-bar">
+                <span class="archive-label">📅 历史归档：</span>
+                <select id="archiveSelect"><option value="">最新一期</option></select>
+            </div>
         </div>
 
         <div class="news-list" id="newsList">
         </div>
 
         <footer>
-            <p>数据每日自动更新 · 24小时热门资讯</p>
+            <p>数据每日自动更新 · 全球趣闻 · 猎奇精选</p>
         </footer>
     </div>
 
@@ -287,11 +325,45 @@
                 document.getElementById('updateTime').textContent = 
                     `更新时间: ${new Date(data.update_time).toLocaleString('zh-CN')}`;
                 renderNews();
+                loadArchiveIndex();
             } catch (error) {
                 console.error('Error loading news data:', error);
                 document.getElementById('updateTime').textContent = '暂无数据，请先运行爬虫脚本';
             }
         }
+
+        async function loadArchiveIndex() {
+            try {
+                const res = await fetch('data/archive/index.json');
+                if (!res.ok) return;
+                const dates = await res.json();
+                const select = document.getElementById('archiveSelect');
+                select.innerHTML = '<option value="">最新一期</option>';
+                dates.slice().reverse().forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d;
+                    opt.textContent = d;
+                    select.appendChild(opt);
+                });
+            } catch (e) { /* 无归档也可 */ }
+        }
+
+        async function loadArchive(date) {
+            try {
+                const res = await fetch(`data/archive/${date}.json`);
+                if (!res.ok) return;
+                const data = await res.json();
+                newsData = data.news;
+                document.getElementById('updateTime').textContent = `归档 · ${date}`;
+                renderNews();
+            } catch (e) { console.error(e); }
+        }
+
+        document.getElementById('archiveSelect').addEventListener('change', (e) => {
+            const date = e.target.value;
+            if (date) loadArchive(date);
+            else loadNewsData();
+        });
 
         function renderNews() {
             const sorted = [...newsData].sort((a, b) => b[currentSort] - a[currentSort]);
@@ -311,6 +383,7 @@
                 const item = document.createElement('div');
                 item.className = 'news-item';
                 item.innerHTML = `
+                    ${news.image ? `<img class="news-thumb" src="${escapeHtml(news.image)}" alt="" loading="lazy">` : ''}
                     <div class="news-header">
                         <div class="rank-badge ${rank <= 3 ? 'rank-' + rank : ''}">${rank}</div>
                         <div class="news-title-wrapper">

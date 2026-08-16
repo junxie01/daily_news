@@ -71,7 +71,7 @@ jobs:
       uses: EndBug/add-and-commit@v9
       with:
         message: "Update hot news $(date '+%Y-%m-%d')"
-        add: data/news.json
+        add: data
         push: true
 
   deploy:

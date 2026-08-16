@@ -25,47 +25,26 @@ class NewsFetcher:
         self.timeout = 10
         self.max_retries = 3
         
+        # 趣闻/猎奇向 RSS（无硬新闻门户）：全球奇趣 + 中文脑洞
         self.rss_sources = {
-            '新浪新闻': 'https://feed.mix.sina.com.cn/api/roll/get?pageid=153&lid=2516&k=&num=50&page=1&r=0.5',
-            '凤凰网': 'https://news.ifeng.com/rss.xml',
-            '新华网': 'https://www.xinhuanet.com/politics/news_politics.xml',
-            '澎湃新闻': 'https://www.thepaper.cn/rss',
-            '36氪': 'https://36kr.com/feed',
+            'Atlas Obscura': 'https://www.atlasobscura.com/feed',          # 全球奇异地标与冷知识
+            'Kottke': 'https://kottke.org/feed',                            # 有趣/惊人/值得一看
+            'Mental Floss': 'https://www.mentalfloss.com/feed',             # 冷知识大全
+            'Damn Interesting': 'https://www.damninteresting.com/feed/',    # 猎奇长文
+            'Neatorama': 'https://www.neatorama.com/feeds/all',            # 奇怪好玩集合
+            'Bored Panda': 'https://www.boredpanda.com/feed/',             # 可爱/搞笑/治愈
+            '煎蛋': 'https://jandan.net/feed',                              # 中文趣图/段子/脑洞
+            'xkcd': 'https://xkcd.com/rss.xml',                             # 极客冷幽默
         }
         
+        # 趣闻/猎奇向中文热榜（selector 为最佳猜测，若某源抓不到请按站点结构微调）
         self.web_sources = [
-            {'name': '新华网', 'url': 'https://www.xinhuanet.com', 'selector': '.title'},
-            {'name': '人民网', 'url': 'https://www.people.com.cn', 'selector': '.title'},
-            {'name': '央视网', 'url': 'https://www.cctv.com', 'selector': '.title'},
-            {'name': '中国新闻网', 'url': 'https://www.chinanews.com', 'selector': '.title'},
-            {'name': '环球网', 'url': 'https://www.huanqiu.com', 'selector': '.title'},
-            {'name': '光明网', 'url': 'https://www.gmw.cn', 'selector': '.title'},
-            {'name': '中国经济网', 'url': 'https://www.ce.cn', 'selector': '.title'},
-            {'name': '澎湃新闻', 'url': 'https://www.thepaper.cn', 'selector': '.title'},
-            {'name': '界面新闻', 'url': 'https://www.jiemian.com', 'selector': '.title'},
-            {'name': '财新', 'url': 'https://www.caixin.com', 'selector': '.title'},
-            {'name': '第一财经', 'url': 'https://www.yicai.com', 'selector': '.title'},
-            {'name': '21世纪经济报道', 'url': 'https://www.21jingji.com', 'selector': '.title'},
-            {'name': '每日经济新闻', 'url': 'https://www.nbd.com.cn', 'selector': '.title'},
-            {'name': '新浪新闻', 'url': 'https://news.sina.com.cn', 'selector': '.title'},
-            {'name': '网易新闻', 'url': 'https://news.163.com', 'selector': '.title'},
-            {'name': '腾讯新闻', 'url': 'https://news.qq.com', 'selector': '.title'},
-            {'name': '凤凰网', 'url': 'https://www.ifeng.com', 'selector': '.title'},
-            {'name': '今日头条', 'url': 'https://www.toutiao.com', 'selector': '.title'},
-            {'name': '一点资讯', 'url': 'https://www.yidianzixun.com', 'selector': '.title'},
-            {'name': '36氪', 'url': 'https://36kr.com', 'selector': '.title'},
-            {'name': '钛媒体', 'url': 'https://www.tmtpost.com', 'selector': '.title'},
-            {'name': '亿欧网', 'url': 'https://www.iyiou.com', 'selector': '.title'},
-            {'name': 'PingWest', 'url': 'https://www.pingwest.com', 'selector': '.title'},
-            {'name': '爱范儿', 'url': 'https://www.ifanr.com', 'selector': '.title'},
-            {'name': '华尔街见闻', 'url': 'https://wallstreetcn.com', 'selector': '.title'},
-            {'name': '东方财富网', 'url': 'https://www.eastmoney.com', 'selector': '.title'},
-            {'name': '金融界', 'url': 'https://www.jrj.com.cn', 'selector': '.title'},
-            {'name': '中国证券报', 'url': 'https://www.cs.com.cn', 'selector': '.title'},
-            {'name': 'CNN', 'url': 'https://www.cnn.com', 'selector': '.title'},
-            {'name': 'AP新闻', 'url': 'https://apnews.com', 'selector': '.title'},
-            {'name': 'NHK世界', 'url': 'https://www3.nhk.or.jp/nhkworld', 'selector': '.title'},
-            {'name': '洛杉矶时报', 'url': 'https://www.latimes.com', 'selector': '.title'},
+            {'name': '微博热搜', 'url': 'https://s.weibo.com/top/summary?cate=realtimehot', 'selector': 'td.td-02 a'},
+            {'name': '百度热搜', 'url': 'https://top.baidu.com/board?tab=realtime', 'selector': '.c-single-text-ellipsis, .content_1YyZf'},
+            {'name': '知乎热榜', 'url': 'https://www.zhihu.com/hot', 'selector': '.HotItem-title'},
+            {'name': 'B站热门', 'url': 'https://www.bilibili.com/v/popular/rank/all', 'selector': '.info .title'},
+            {'name': '抖音热榜', 'url': 'https://www.douyin.com/hot', 'selector': '.title'},
+            {'name': '今日头条热榜', 'url': 'https://www.toutiao.com/', 'selector': '.title'},
         ]
     
     def get_with_retry(self, url, timeout=None):
@@ -85,6 +64,31 @@ class NewsFetcher:
 
     def get_hash(self, title):
         return hashlib.md5(title.encode('utf-8')).hexdigest()
+
+    def _extract_rss_image(self, item):
+        """从 RSS item 提取缩略图（media:thumbnail / enclosure）。"""
+        try:
+            for tag in item.find_all():
+                if 'thumbnail' in tag.name.lower():
+                    url = tag.get('url', '') or ''
+                    if url:
+                        return url
+            enc = item.find('enclosure')
+            if enc and enc.get('url') and str(enc.get('type', '')).startswith('image'):
+                return enc.get('url')
+        except Exception:
+            pass
+        return ''
+
+    def _extract_og_image(self, soup):
+        """从网页提取 og:image 作为缩略图。"""
+        try:
+            og = soup.select_one('meta[property="og:image"]')
+            if og and og.get('content'):
+                return og.get('content')
+        except Exception:
+            pass
+        return ''
 
     def fetch_rss_feed(self, source_name, rss_url):
         try:
@@ -132,11 +136,11 @@ class NewsFetcher:
                         'source': source_name,
                         'url': url,
                         'publish_time': publish_time.isoformat(),
-                        'views': random.randint(1000, 100000),
-                        'comments': random.randint(10, 5000),
-                        'forwards': random.randint(5, 2000),
-                        'favorites': random.randint(20, 3000),
-                        
+                        'views': 0,
+                        'comments': 0,
+                        'forwards': 0,
+                        'favorites': 0,
+                        'image': self._extract_rss_image(item),
                         'content': item.find('description') or item.find('content:encoded') or '',
                     }
                     if hasattr(news['content'], 'get_text'):
@@ -1807,11 +1811,11 @@ class NewsFetcher:
                         'source': source_info['name'],
                         'url': href,
                         'publish_time': publish_time.isoformat(),
-                        'views': random.randint(1000, 100000),
-                        'comments': random.randint(10, 5000),
-                        'forwards': random.randint(5, 2000),
-                        'favorites': random.randint(20, 3000),
-                        
+                        'views': 0,
+                        'comments': 0,
+                        'forwards': 0,
+                        'favorites': 0,
+                        'image': self._extract_og_image(soup),
                         'content': detail_content,
                     }
                     self.news_list.append(news)
@@ -1862,6 +1866,7 @@ class NewsFetcher:
                             'comments': story.get('descendants', 0),
                             'forwards': 0,
                             'favorites': story.get('score', 0),
+                            'image': '',
 
                             'content': story.get('text', '')
                         }
@@ -1873,44 +1878,56 @@ class NewsFetcher:
             print(f'Hacker News fetch error: {e}')
 
     def fetch_reddit(self):
-        try:
-            url = 'https://www.reddit.com/r/all/top.json?sort=top&t=day&limit=50'
-            response = self.get_with_retry(url, timeout=10)
-            if not response:
-                print(f'Failed to fetch Reddit after {self.max_retries} attempts')
-                return
-            
-            data = response.json()
-            
-            for post in data.get('data', {}).get('children', []):
-                try:
-                    post_data = post['data']
-                    title = post_data.get('title', '')
-                    if not title:
-                        continue
-                    
-                    publish_time = datetime.fromtimestamp(post_data['created_utc'])
-                    if datetime.now() - publish_time > timedelta(hours=24):
-                        continue
-                    
-                    news = {
-                        'id': self.get_hash(title),
-                        'title': title,
-                        'source': f'Reddit - r/{post_data["subreddit"]}',
-                        'url': f'https://www.reddit.com{post_data["permalink"]}',
-                        'publish_time': publish_time.isoformat(),
-                        'views': post_data.get('score', 0) * 5,
-                        'comments': post_data.get('num_comments', 0),
-                        'forwards': 0,
-                        'favorites': post_data.get('score', 0),
-
-                        'content': post_data.get('selftext', '')
-                    }
-                    self.news_list.append(news)
-                except Exception as e:
+        # 只抓"趣闻/猎奇"向 subreddit，偏离 r/all 的硬新闻流
+        subreddits = [
+            'interestingasfuck', 'nextfuckinglevel', 'Damnthatsinteresting',
+            'BeAmazed', 'oddlysatisfying', 'todayilearned', 'DIY',
+            'NotTheOnion', 'AnimalsBeingJerks', 'ArtisanVideos',
+            'CrazyIdeas', 'lifehacks', 'ExplainLikeImFive', 'woahdude',
+        ]
+        for sub in subreddits:
+            try:
+                url = f'https://www.reddit.com/r/{sub}/top.json?sort=top&t=day&limit=20'
+                response = self.get_with_retry(url, timeout=10)
+                if not response:
                     continue
-        except Exception as e:
-            print(f'Reddit fetch error: {e}')
+                data = response.json()
+                for post in data.get('data', {}).get('children', []):
+                    try:
+                        post_data = post['data']
+                        title = post_data.get('title', '')
+                        if not title:
+                            continue
+                        publish_time = datetime.fromtimestamp(post_data['created_utc'])
+                        if datetime.now() - publish_time > timedelta(hours=24):
+                            continue
+                        # 缩略图：thumbnail 字段优先，否则取 preview 首图
+                        image = ''
+                        thumb = post_data.get('thumbnail')
+                        if isinstance(thumb, str) and thumb.startswith('http'):
+                            image = thumb
+                        else:
+                            previews = post_data.get('preview', {}).get('images', [])
+                            if previews and previews[0].get('source', {}).get('url'):
+                                image = previews[0]['source']['url']
+                        news = {
+                            'id': self.get_hash(title),
+                            'title': title,
+                            'source': f'Reddit - r/{post_data["subreddit"]}',
+                            'url': f'https://www.reddit.com{post_data["permalink"]}',
+                            'publish_time': publish_time.isoformat(),
+                            'views': post_data.get('score', 0) * 5,
+                            'comments': post_data.get('num_comments', 0),
+                            'forwards': 0,
+                            'favorites': post_data.get('score', 0),
+                            'image': image,
+                            'content': post_data.get('selftext', '')
+                        }
+                        self.news_list.append(news)
+                    except Exception:
+                        continue
+            except Exception as e:
+                print(f'Reddit r/{sub} fetch error: {e}')
 
     def fetch_zhihu(self):
         try:
@@ -2068,110 +2085,6 @@ class NewsFetcher:
         except Exception as e:
             print(f'微信 fetch error: {e}')
 
-    def fetch_sample_data(self):
-        sample_news = [
-            {
-                'title': 'AI大模型新突破：GPT-5即将发布，性能提升3倍',
-                'source': 'TechCrunch',
-                'url': 'https://techcrunch.com',
-                'publish_time': (datetime.now() - timedelta(hours=2)).isoformat(),
-                'views': 150000,
-                'comments': 2340,
-                'forwards': 5600,
-                'favorites': 8900,
-
-                'content': '据可靠消息，OpenAI将于下周发布GPT-5大模型，新模型在推理能力、多模态理解等方面有显著提升...'
-            },
-            {
-                'title': '苹果发布Vision Pro 2，售价降低30%',
-                'source': 'The Verge',
-                'url': 'https://www.theverge.com',
-                'publish_time': (datetime.now() - timedelta(hours=5)).isoformat(),
-                'views': 280000,
-                'comments': 4500,
-                'forwards': 8900,
-                'favorites': 15000,
-
-                'content': '苹果今日正式发布Vision Pro 2，售价从3499美元降至2499美元，同时重量减轻25%...'
-            },
-            {
-                'title': '特斯拉股价大跌20%，市值蒸发千亿美元',
-                'source': 'Bloomberg',
-                'url': 'https://www.bloomberg.com',
-                'publish_time': (datetime.now() - timedelta(hours=8)).isoformat(),
-                'views': 350000,
-                'comments': 5600,
-                'forwards': 12000,
-                'favorites': 18000,
-
-                'content': '特斯拉股价今日暴跌20%，创下2020年以来最大单日跌幅，主要受销量下滑和竞争加剧影响...'
-            },
-            {
-                'title': '中国芯片技术突破：14nm光刻机实现量产',
-                'source': '人民日报',
-                'url': 'https://www.people.com.cn',
-                'publish_time': (datetime.now() - timedelta(hours=12)).isoformat(),
-                'views': 500000,
-                'comments': 8900,
-                'forwards': 25000,
-                'favorites': 35000,
-
-                'content': '上海微电子宣布，首台国产14nm光刻机已通过验收并实现量产，标志着中国芯片产业迈出关键一步...'
-            },
-            {
-                'title': '2026年世界杯预选赛：国足2-0战胜韩国',
-                'source': '央视体育',
-                'url': 'https://sports.cctv.com',
-                'publish_time': (datetime.now() - timedelta(hours=15)).isoformat(),
-                'views': 800000,
-                'comments': 15000,
-                'forwards': 45000,
-                'favorites': 55000,
-
-                'content': '在2026年世界杯预选赛亚洲区比赛中，国足主场2-0战胜韩国队，取得关键三分...'
-            },
-            {
-                'title': '新型电池技术：充电10分钟续航1000公里',
-                'source': 'Nature',
-                'url': 'https://www.nature.com',
-                'publish_time': (datetime.now() - timedelta(hours=18)).isoformat(),
-                'views': 220000,
-                'comments': 3400,
-                'forwards': 7800,
-                'favorites': 12000,
-
-                'content': '科学家研发出新型固态电池，充电10分钟即可续航1000公里，预计2028年实现商业化...'
-            },
-            {
-                'title': '美联储宣布降息25个基点',
-                'source': '华尔街日报',
-                'url': 'https://www.wsj.com',
-                'publish_time': (datetime.now() - timedelta(hours=20)).isoformat(),
-                'views': 420000,
-                'comments': 6700,
-                'forwards': 15000,
-                'favorites': 22000,
-
-                'content': '美联储宣布将联邦基金利率下调25个基点，这是今年以来第三次降息...'
-            },
-            {
-                'title': 'Netflix新剧《三体2》上线，首日观看量破亿',
-                'source': 'Variety',
-                'url': 'https://variety.com',
-                'publish_time': (datetime.now() - timedelta(hours=22)).isoformat(),
-                'views': 380000,
-                'comments': 5200,
-                'forwards': 12000,
-                'favorites': 19000,
-
-                'content': 'Netflix《三体》第二季今日上线，首日全球观看量突破1亿次，口碑爆棚...'
-            }
-        ]
-        
-        for news in sample_news:
-            news['id'] = self.get_hash(news['title'])
-            self.news_list.append(news)
-
     def fetch_all_sources(self):
         print('Fetching from RSS sources...')
         for source_name, rss_url in self.rss_sources.items():
@@ -2225,33 +2138,58 @@ class NewsFetcher:
     def calculate_hotness(self, news_list):
         if not news_list:
             return news_list
-        
-        n = len(news_list)
-        
-        dimensions = ['views', 'comments', 'forwards', 'favorites']
-        
-        for dim in dimensions:
-            sorted_news = sorted(news_list, key=lambda x: x[dim], reverse=True)
-            for rank, news in enumerate(sorted_news, 1):
-                score = (20.0 / n) * (n - rank + 1)
-                if 'hotness' not in news:
-                    news['hotness'] = 0.0
-                news['hotness'] += score
-        
+        now = datetime.now()
         for news in news_list:
-            news['hotness'] = round(news['hotness'], 2)
-        
+            views = news.get('views', 0) or 0
+            comments = news.get('comments', 0) or 0
+            forwards = news.get('forwards', 0) or 0
+            favorites = news.get('favorites', 0) or 0
+            # 真实互动信号（来自 HN / Reddit 等真正暴露指标的源）
+            engagement = views + comments * 5 + forwards * 3 + favorites * 2
+            # 时效信号：越新越高，24h 内线性衰减，约 50h 后归零
+            try:
+                pt = datetime.fromisoformat(news.get('publish_time', ''))
+            except Exception:
+                pt = now
+            age_h = max(0.0, (now - pt).total_seconds() / 3600.0)
+            recency = max(0.0, 1000.0 - age_h * 20.0)
+            # 来源权重：天生有趣的源给基础分
+            src = news.get('source', '') or ''
+            weight = 400.0 if ('Reddit' in src or 'Hacker News' in src or 'Atlas' in src) else 0.0
+            news['hotness'] = int(round(engagement + recency + weight))
         return sorted(news_list, key=lambda x: x['hotness'], reverse=True)
 
     def save_data(self, news_list):
+        payload = {
+            'update_time': datetime.now().isoformat(),
+            'total_count': len(news_list),
+            'sources': len(self.rss_sources) + len(self.web_sources) + 2,
+            'news': news_list
+        }
+        # 当日快照归档（按日期留存历史，可在网页里翻看）
+        archive_dir = os.path.join(self.data_dir, 'archive')
+        os.makedirs(archive_dir, exist_ok=True)
+        today = datetime.now().strftime('%Y-%m-%d')
+        with open(os.path.join(archive_dir, f'{today}.json'), 'w', encoding='utf-8') as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+        # 更新归档索引
+        index_file = os.path.join(archive_dir, 'index.json')
+        dates = []
+        if os.path.exists(index_file):
+            try:
+                with open(index_file, 'r', encoding='utf-8') as f:
+                    dates = json.load(f)
+            except Exception:
+                dates = []
+        if today not in dates:
+            dates.append(today)
+            dates.sort()
+            with open(index_file, 'w', encoding='utf-8') as f:
+                json.dump(dates, f, ensure_ascii=False, indent=2)
+        # 主文件（供网页实时读取）
         output_file = os.path.join(self.data_dir, 'news.json')
         with open(output_file, 'w', encoding='utf-8') as f:
-            json.dump({
-                'update_time': datetime.now().isoformat(),
-                'total_count': len(news_list),
-                'sources': len(self.rss_sources) + len(self.web_sources) + 3,
-                'news': news_list
-            }, f, ensure_ascii=False, indent=2)
+            json.dump(payload, f, ensure_ascii=False, indent=2)
         print(f'Saved {len(news_list)} news items to {output_file}')
 
     def run(self):
@@ -2266,8 +2204,8 @@ class NewsFetcher:
         self.news_list = filtered_news
         
         if len(self.news_list) < 20:
-            print('Insufficient data, adding sample data...')
-            self.fetch_sample_data()
+            print('WARNING: only %d items fetched, below 20. '
+                  'No sample fallback — check source connectivity.' % len(self.news_list))
         
         deduped_news = self.deduplicate_and_aggregate()
         print(f'Deduplicated to {len(deduped_news)} unique news items')
