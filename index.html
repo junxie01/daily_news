@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>热点资讯</title>
+    <title>每日趣闻 · 全球猎奇</title>
     <style>
         * {
             margin: 0;
@@ -219,12 +219,34 @@
             flex: 1;
         }
 
-        .news-thumb {
+        .news-thumb-wrap {
+            position: relative;
             width: 100%;
-            max-height: 220px;
+            height: 180px;
+            margin-bottom: 12px;
+        }
+
+        .news-thumb-ph {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            letter-spacing: 2px;
+        }
+
+        .news-thumb {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
             border-radius: 8px;
-            margin-bottom: 12px;
             background: #eee;
         }
 
@@ -294,8 +316,8 @@
 
             </div>
             <div class="view-buttons">
-                <button class="active" data-view="top">最热门20条</button>
-                <button data-view="bottom">最冷门20条</button>
+                <button class="active" data-cat="趣新闻">趣新闻</button>
+                <button data-cat="硬新闻">硬新闻</button>
             </div>
             <div class="archive-bar">
                 <span class="archive-label">📅 历史归档：</span>
@@ -314,7 +336,7 @@
     <script>
         let newsData = [];
         let currentSort = 'hotness';
-        let currentView = 'top';
+        let currentCat = '趣新闻';
 
         async function loadNewsData() {
             try {
@@ -366,24 +388,27 @@
         });
 
         function renderNews() {
-            const sorted = [...newsData].sort((a, b) => b[currentSort] - a[currentSort]);
-            let displayNews;
-            
-            if (currentView === 'top') {
-                displayNews = sorted.slice(0, 20);
-            } else {
-                displayNews = sorted.slice(-20).reverse();
-            }
+            // 按「趣新闻 / 硬新闻」分类筛选
+            const catNews = newsData.filter(n => (n.category || '趣新闻') === currentCat);
+            // 稳健排序：当前维度降序（缺字段按 0），同分按发布时间新→旧
+            const sorted = catNews.slice().sort((a, b) => {
+                const d = (Number(b[currentSort]) || 0) - (Number(a[currentSort]) || 0);
+                if (d !== 0) return d;
+                return (Date.parse(b.publish_time) || 0) - (Date.parse(a.publish_time) || 0);
+            });
 
             const container = document.getElementById('newsList');
             container.innerHTML = '';
 
-            displayNews.forEach((news, index) => {
+            sorted.forEach((news, index) => {
                 const rank = index + 1;
                 const item = document.createElement('div');
                 item.className = 'news-item';
                 item.innerHTML = `
-                    ${news.image ? `<img class="news-thumb" src="${escapeHtml(news.image)}" alt="" loading="lazy">` : ''}
+                    <div class="news-thumb-wrap">
+                        <div class="news-thumb-ph">${escapeHtml((news.source || '?').slice(0, 2))}</div>
+                        ${news.image ? `<img class="news-thumb" src="${escapeHtml(news.image)}" alt="" loading="lazy" onerror="this.remove()">` : ''}
+                    </div>
                     <div class="news-header">
                         <div class="rank-badge ${rank <= 3 ? 'rank-' + rank : ''}">${rank}</div>
                         <div class="news-title-wrapper">
@@ -460,6 +485,7 @@
         }
 
         function formatNumber(num) {
+            num = Number(num) || 0;
             if (num >= 10000) {
                 return (num / 10000).toFixed(1) + '万';
             }
@@ -479,7 +505,7 @@
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.view-buttons button').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                currentView = btn.dataset.view;
+                currentCat = btn.dataset.cat;
                 renderNews();
             });
         });

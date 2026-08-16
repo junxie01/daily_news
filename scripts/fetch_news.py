@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import json
+import math
 import hashlib
 import requests
 from datetime import datetime, timedelta
@@ -37,14 +38,14 @@ class NewsFetcher:
             'xkcd': 'https://xkcd.com/rss.xml',                             # 极客冷幽默
         }
         
-        # 趣闻/猎奇向中文热榜（selector 为最佳猜测，若某源抓不到请按站点结构微调）
+        # 硬新闻向中文热榜（selector 为最佳猜测，若某源抓不到请按站点结构微调）
+        # 这些归类为「硬新闻」，与趣闻 RSS / Hacker News / Reddit 分开，靠网页「硬新闻 / 趣新闻」切换查看
         self.web_sources = [
             {'name': '微博热搜', 'url': 'https://s.weibo.com/top/summary?cate=realtimehot', 'selector': 'td.td-02 a'},
             {'name': '百度热搜', 'url': 'https://top.baidu.com/board?tab=realtime', 'selector': '.c-single-text-ellipsis, .content_1YyZf'},
-            {'name': '知乎热榜', 'url': 'https://www.zhihu.com/hot', 'selector': '.HotItem-title'},
+            {'name': '今日头条热榜', 'url': 'https://www.toutiao.com/', 'selector': '.title'},
             {'name': 'B站热门', 'url': 'https://www.bilibili.com/v/popular/rank/all', 'selector': '.info .title'},
             {'name': '抖音热榜', 'url': 'https://www.douyin.com/hot', 'selector': '.title'},
-            {'name': '今日头条热榜', 'url': 'https://www.toutiao.com/', 'selector': '.title'},
         ]
     
     def get_with_retry(self, url, timeout=None):
@@ -1890,6 +1891,10 @@ class NewsFetcher:
                 url = f'https://www.reddit.com/r/{sub}/top.json?sort=top&t=day&limit=20'
                 response = self.get_with_retry(url, timeout=10)
                 if not response:
+                    # GitHub Actions 等云 IP 常被 Reddit 墙，退回 old.reddit 再试一次
+                    alt = f'https://old.reddit.com/r/{sub}/top.json?sort=top&t=day&limit=20'
+                    response = self.get_with_retry(alt, timeout=10)
+                if not response:
                     continue
                 data = response.json()
                 for post in data.get('data', {}).get('children', []):
@@ -1931,72 +1936,54 @@ class NewsFetcher:
 
     def fetch_zhihu(self):
         try:
-            # 知乎热榜API
             url = 'https://api.zhihu.com/topstory/hot-list'
-            params = {
-                'limit': '50',
-                'reverse_order': '0'
-            }
-            
-            # 使用带有正确User-Agent的会话
             session = requests.Session()
             session.headers.update({
                 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15',
                 'Host': 'api.zhihu.com'
             })
-            
             response = self.get_with_retry(url, timeout=self.timeout)
             if not response:
                 print(f'Failed to fetch 知乎 after {self.max_retries} attempts')
                 return
-            
+
             data = response.json()
-            
             for item in data.get('data', []):
                 try:
                     target = item.get('target', {})
                     title = target.get('title', '')
                     if not title:
                         continue
-                    
-                    # 计算热度值
+
                     detail_text = item.get('detail_text', '')
                     hot = 0
                     if detail_text:
                         try:
-                            hot = int(detail_text.split(' ')[0]) * 10000  # 转换为具体数值
-                        except:
+                            hot = int(detail_text.split(' ')[0]) * 10000
+                        except Exception:
                             pass
-                    
-                    # 构建问题链接
+
                     question_url = 'https://www.zhihu.com'
-                    # 尝试从target中获取问题ID
                     if target.get('id'):
-                        question_id = target.get('id')
-                        question_url = f'https://www.zhihu.com/question/{question_id}'
+                        question_url = f'https://www.zhihu.com/question/{target.get("id")}'
                     else:
-                        # 尝试从url字段提取问题ID
                         url_field = target.get('url', '')
-                        if url_field:
-                            # 从API链接中提取问题ID
-                            if 'questions' in url_field:
-                                # 提取数字ID
-                                import re
-                                match = re.search(r'questions/(\d+)', url_field)
-                                if match:
-                                    question_id = match.group(1)
-                                    question_url = f'https://www.zhihu.com/question/{question_id}'
-                    
+                        if url_field and 'questions' in url_field:
+                            import re
+                            match = re.search(r'questions/(\d+)', url_field)
+                            if match:
+                                question_url = f'https://www.zhihu.com/question/{match.group(1)}'
+
                     publish_time = datetime.now()
                     if target.get('created'):
                         try:
                             publish_time = datetime.fromtimestamp(target.get('created'))
-                        except:
+                        except Exception:
                             pass
-                    
+
                     if datetime.now() - publish_time > timedelta(hours=24):
                         continue
-                    
+
                     news = {
                         'id': self.get_hash(title),
                         'title': title,
@@ -2007,83 +1994,14 @@ class NewsFetcher:
                         'comments': target.get('answer_count', 0),
                         'forwards': 0,
                         'favorites': target.get('follower_count', 0),
-
+                        'image': '',
                         'content': target.get('excerpt', '')
                     }
                     self.news_list.append(news)
-                except Exception as e:
+                except Exception:
                     continue
         except Exception as e:
             print(f'知乎 fetch error: {e}')
-
-
-
-    def fetch_wechat(self):
-        try:
-            # 微信热门文章 - 使用第三方聚合API
-            url = 'https://weixin.sogou.com/'
-            response = self.get_with_retry(url, timeout=self.timeout)
-            if not response:
-                print(f'Failed to fetch 微信 after {self.max_retries} attempts')
-                return
-            
-            soup = BeautifulSoup(response.text, 'lxml')
-            
-            # 查找热门文章
-            articles = soup.select('.news-list li')
-            
-            for article in articles[:30]:
-                try:
-                    title_elem = article.select_one('h3')
-                    if not title_elem:
-                        continue
-                    
-                    title = title_elem.get_text(strip=True)
-                    if not title:
-                        continue
-                    
-                    link_elem = article.select_one('a')
-                    if not link_elem:
-                        continue
-                    
-                    url = link_elem.get('href')
-                    if not url:
-                        continue
-                    
-                    # 提取热度信息
-                    info_elem = article.select_one('.info')
-                    read_count = 0
-                    if info_elem:
-                        info_text = info_elem.get_text(strip=True)
-                        if info_text:
-                            import re
-                            match = re.search(r'阅读 (\d+)', info_text)
-                            if match:
-                                try:
-                                    read_count = int(match.group(1))
-                                except:
-                                    pass
-                    
-                    publish_time = datetime.now()
-                    
-                    news = {
-                        'id': self.get_hash(title),
-                        'title': title,
-                        'source': '微信',
-                        'url': url,
-                        'publish_time': publish_time.isoformat(),
-                        'views': read_count,
-                        'comments': 0,
-                        'forwards': 0,
-                        'favorites': read_count // 10,  # 假设每10次阅读对应1个收藏
-
-                        'content': ''
-                    }
-                    self.news_list.append(news)
-                except Exception as e:
-                    continue
-        except Exception as e:
-            print(f'微信 fetch error: {e}')
 
     def fetch_all_sources(self):
         print('Fetching from RSS sources...')
@@ -2106,12 +2024,8 @@ class NewsFetcher:
         self.fetch_reddit()
         time.sleep(random.uniform(1, 2))
         
-        print('Fetching 知乎...')
+        print('Fetching 知乎热榜...')
         self.fetch_zhihu()
-        time.sleep(random.uniform(1, 2))
-        
-        print('Fetching 微信...')
-        self.fetch_wechat()
         time.sleep(random.uniform(1, 2))
 
     def deduplicate_and_aggregate(self):
@@ -2138,32 +2052,32 @@ class NewsFetcher:
     def calculate_hotness(self, news_list):
         if not news_list:
             return news_list
-        now = datetime.now()
+        n = len(news_list)
+        dims = ['views', 'comments', 'forwards', 'favorites']
+        # 四维打分：浏览量 / 评论数 / 转发量 / 收藏数，每维按降序排名，
+        # 第 1 名得 25 分、末名得 (25/n) 分，四维合计满分 100（每个占比 25%）
+        for dim in dims:
+            ranked = sorted(news_list, key=lambda x: (x.get(dim, 0) or 0), reverse=True)
+            for rank, news in enumerate(ranked, 1):
+                score = (25.0 / n) * (n - rank + 1)
+                if 'hotness' not in news:
+                    news['hotness'] = 0.0
+                news['hotness'] += score
         for news in news_list:
-            views = news.get('views', 0) or 0
-            comments = news.get('comments', 0) or 0
-            forwards = news.get('forwards', 0) or 0
-            favorites = news.get('favorites', 0) or 0
-            # 真实互动信号（来自 HN / Reddit 等真正暴露指标的源）
-            engagement = views + comments * 5 + forwards * 3 + favorites * 2
-            # 时效信号：越新越高，24h 内线性衰减，约 50h 后归零
-            try:
-                pt = datetime.fromisoformat(news.get('publish_time', ''))
-            except Exception:
-                pt = now
-            age_h = max(0.0, (now - pt).total_seconds() / 3600.0)
-            recency = max(0.0, 1000.0 - age_h * 20.0)
-            # 来源权重：天生有趣的源给基础分
+            news['hotness'] = round(news['hotness'], 2)
+            # 分类：趣闻源（RSS 趣闻 + Hacker News + Reddit）归「趣新闻」，其余（中文硬新闻热榜）归「硬新闻」
             src = news.get('source', '') or ''
-            weight = 400.0 if ('Reddit' in src or 'Hacker News' in src or 'Atlas' in src) else 0.0
-            news['hotness'] = int(round(engagement + recency + weight))
+            if src in self.rss_sources or 'Reddit' in src or 'Hacker News' in src:
+                news['category'] = '趣新闻'
+            else:
+                news['category'] = '硬新闻'
         return sorted(news_list, key=lambda x: x['hotness'], reverse=True)
 
     def save_data(self, news_list):
         payload = {
             'update_time': datetime.now().isoformat(),
             'total_count': len(news_list),
-            'sources': len(self.rss_sources) + len(self.web_sources) + 2,
+            'sources': len(self.rss_sources) + len(self.web_sources) + 3,
             'news': news_list
         }
         # 当日快照归档（按日期留存历史，可在网页里翻看）

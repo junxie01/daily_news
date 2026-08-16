@@ -6,11 +6,11 @@
 
 ## 功能特性
 
-1. **趣闻向多源抓取**：Reddit 趣味 subreddit（interestingasfuck / nextfuckinglevel / todayilearned …）、Hacker News、Atlas Obscura / Kottke / Mental Floss 等奇趣 RSS，以及微博/百度/知乎/B站/抖音中文热榜
+1. **双栏资讯**：「趣新闻」（Reddit 趣味 subreddit、Hacker News、Atlas Obscura / Kottke / Mental Floss 等奇趣 RSS）与「硬新闻」（微博 / 百度 / 头条 / B站 / 抖音 / 知乎 中文热榜）分开抓取，网页顶部一键切换
 2. **智能去重聚合**：自动识别重复资讯，保留最早来源并聚合多平台数据
-3. **真实热度排序**：仅对真正暴露互动数据的源（Reddit / HN）采用真实指标，其余按「时效 + 来源权重」排序，**不再伪造浏览/评论数**
-4. **缩略图 + 历史归档**：资讯带封面图；每天快照存入 `data/archive/YYYY-MM-DD.json`，网页可翻看往期
-5. **交互式展示**：支持按热度/浏览量/评论数/转发量/收藏数排序，查看热门/冷门资讯
+3. **四维热度打分**：浏览量 / 评论数 / 转发量 / 收藏数 四个维度各按排名占 25%，合计满分 100（真实指标，不伪造）
+4. **缩略图 + 历史归档**：资讯带封面图（无图源用渐变占位块兜底）；每天快照存入 `data/archive/YYYY-MM-DD.json`，网页可翻看往期
+5. **交互式展示**：支持按热度/浏览量/评论数/转发量/收藏数排序，并在「趣新闻 / 硬新闻」之间切换
 6. **自动化更新**：GitHub Actions 每天自动抓取新闻并部署网页，无需 AI API 或付费额度
 
 > 源清单以代码为准：`scripts/fetch_news.py` 里的 `rss_sources`、`web_sources`，以及 `fetch_reddit()` 中的 subreddit 列表。想加/换源直接改这几处即可。
@@ -80,83 +80,49 @@ daily_news/
 
 ## 扩展爬虫
 
-### 已支持的资讯源
+### 当前资讯源
 
-| 序号 | 名称 | 网址 | 描述 | 状态 |
-|------|------|------|------|------|
-| 1 | Reddit | https://www.reddit.com/ | 全球最大综合社区论坛，按主题分 subreddit（如 r/technology, r/AskReddit） | 不可用 |
-| 2 | Quora | https://www.quora.com/ | 问答社区，覆盖科技、文化、生活等多领域知识分享 | 待实现 |
-| 3 | Stack Overflow | https://stackoverflow.com/ | 程序员技术问答首选平台（Stack Exchange 网络核心站） | 待实现 |
-| 4 | Hacker News | https://news.ycombinator.com/ | Y Combinator 运营，聚焦创业、计算机科学与科技新闻 | 可用 |
-| 5 | GitHub Discussions | https://github.com/ | 代码托管平台内置讨论区，开发者协作与技术交流活跃 | 待实现 |
-| 6 | Dev.to | https://dev.to/ | 开发者友好型社区，分享教程、经验与开源项目 | 待实现 |
-| 7 | Slashdot | https://slashdot.org/ | 老牌科技新闻论坛，"News for Nerds"，评论文化深厚 | 待实现 |
-| 8 | CodeProject | https://www.codeproject.com/ | 软件开发资源与论坛，含大量代码示例与解决方案 | 待实现 |
-| 9 | DZone | https://dzone.com/ | 面向开发者与技术决策者的文章、教程与社区讨论 | 待实现 |
-| 10 | Codeforces | https://codeforces.com/ | 编程竞赛平台，含算法讨论区与题解社区 | 待实现 |
-| 11 | Experts Exchange | https://www.experts-exchange.com/ | IT技术问答论坛（部分内容需订阅） | 待实现 |
-| 12 | Unix.com Forums | https://www.unix.com/ | Unix/Linux 系统管理与开发专业论坛 | 待实现 |
-| 13 | Computing.net | https://www.computing.net/ | 计算机软硬件技术支持与故障排查社区 | 待实现 |
-| 14 | Quantocracy | https://quantocracy.com/ | 量化交易、金融工程领域精选内容聚合与讨论 | 待实现 |
-| 15 | ResearchGate | https://www.researchgate.net/ | 全球科研人员学术交流平台，论文分享与合作枢纽 | 待实现 |
-| 16 | BlackHatWorld | https://www.blackhatworld.com/ | 数字营销、SEO、联盟营销领域专业论坛（含白帽/灰帽讨论） | 待实现 |
-| 17 | TripAdvisor Forums | https://www.tripadvisor.com/ | 全球旅行者经验分享、目的地攻略与酒店点评社区 | 待实现 |
-| 18 | Something Awful | https://forums.somethingawful.com/ | 综合娱乐论坛（需付费注册），以幽默文化与深度讨论著称 | 待实现 |
-| 19 | Super User | https://superuser.com/ | Stack Exchange 旗下，专注通用计算机技术问题解答 | 待实现 |
-| 20 | Warrior Forum | https://www.warriorforum.com/ | 联盟营销、电商创业领域老牌论坛，实战经验丰富 | 待实现 |
+项目把内容分成两类，网页顶部用「趣新闻 / 硬新闻」按钮切换：
 
-### 内置资讯源
+**🟢 趣新闻（RSS + 社区）**
 
-| 名称 | 类型 | 状态 |
+| 源 | 类型 | 说明 |
 |------|------|------|
-| 新浪新闻 | RSS | 可用 |
-| 凤凰网 | RSS | 可用 |
-| 新华网 | RSS | 可用 |
-| 澎湃新闻 | RSS | 可用 |
-| 36氪 | RSS | 可用 |
-| 虎嗅 | RSS | 可用 |
-| 网易新闻 | RSS | 不可用 |
-| 环球时报 | RSS | 不可用 |
-| 人民网 | Web | 可用 |
-| 央视网 | Web | 可用 |
-| 中国新闻网 | Web | 可用 |
-| 环球网 | Web | 可用 |
-| 光明网 | Web | 可用 |
-| 中国经济网 | Web | 可用 |
-| 界面新闻 | Web | 可用 |
-| 财新 | Web | 可用 |
-| 第一财经 | Web | 可用 |
-| 21世纪经济报道 | Web | 可用 |
-| 每日经济新闻 | Web | 可用 |
-| 腾讯新闻 | Web | 可用 |
-| 今日头条 | Web | 可用 |
-| 一点资讯 | Web | 可用 |
-| 钛媒体 | Web | 可用 |
-| 亿欧网 | Web | 可用 |
-| PingWest | Web | 可用 |
-| 爱范儿 | Web | 可用 |
-| 华尔街见闻 | Web | 可用 |
-| 东方财富网 | Web | 可用 |
-| 金融界 | Web | 可用 |
-| 中国证券报 | Web | 可用 |
-| CNN | Web | 可用 |
-| AP新闻 | Web | 可用 |
-| NHK世界 | Web | 可用 |
-| 洛杉矶时报 | Web | 可用 |
-| 朝日新闻 | Web | 不可用 |
-| 知乎 | API | 不可用 |
+| Atlas Obscura | RSS | 冷门地点 / 奇异历史 |
+| Kottke | RSS | 每日有趣链接合集 |
+| Mental Floss | RSS | 冷知识百科 |
+| Damn Interesting | RSS | 猎奇历史 / 人物 |
+| Neatorama | RSS | 奇怪有趣事物聚合 |
+| Bored Panda | RSS | 轻松搞笑图文（带缩略图） |
+| 煎蛋 | RSS | 中文趣闻 / 无聊图 |
+| xkcd | RSS | 极客漫画 |
+| Hacker News | API | 科技 / 长见识，含真实评论数 |
+| Reddit（14 个趣闻 subreddit） | API | interestingasfuck / nextfuckinglevel / todayilearned / NotTheOnion / oddlysatisfying / DIY / woahdude …，含真实分数与缩略图 |
+
+**🔴 硬新闻（中文热榜）**
+
+| 源 | 类型 | 说明 |
+|------|------|------|
+| 微博热搜 | 网页 | 实时热搜 |
+| 百度热搜 | 网页 | 实时热榜 |
+| 今日头条热榜 | 网页 | 头条热榜 |
+| B站热门 | 网页 | 全站热门 |
+| 抖音热榜 | 网页 | 实时热榜 |
+| 知乎 | API | 知乎热榜（含真实热度值） |
+
+> 注：Reddit 在 GitHub Actions 等云厂商 IP 上常被限流（返回空），本地运行正常；届时由 HN + 趣闻 RSS 兜底。
 
 ## 自定义
 
 ### 添加新闻源
 
-编辑 `scripts/fetch_news.py`，在 `web_sources` 列表中添加新的新闻源：
+编辑 `scripts/fetch_news.py` 增源：
 
 ```python
-web_sources = [
-    {'name': '新来源名称', 'url': 'https://example.com', 'selector': '.title'},
-    # ... 其他来源
-]
+- 加 RSS 趣闻源：往 `rss_sources` 字典追加 `'名称': 'RSS_URL'`；
+- 加 Reddit 趣闻版块：往 `fetch_reddit()` 里的 `subreddits` 列表追加 subreddit 名；
+- 加 HN 类社区：扩展 `fetch_hackernews()`；
+- 加硬新闻网页源：往 `web_sources` 列表追加 `{'name': '名称', 'url': '...', 'selector': '.标题选择器'}`。
 ```
 
 ## 许可证
