@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 import time
 import random
 import re
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, quote
 
 class NewsFetcher:
     def __init__(self):
@@ -1982,6 +1982,154 @@ class NewsFetcher:
         except Exception as e:
             print(f'知乎 fetch error: {e}')
 
+    # ------------------------------------------------------------------
+    # 硬新闻热榜：直连各平台 JSON 接口抓取标题（替代已失效的通用文章爬虫）。
+    # 中文热榜页多是 JS 渲染，静态 requests 抓不到标题；这里改用其 JSON 接口。
+    # ------------------------------------------------------------------
+    def fetch_hotlist(self, source_info):
+        name = source_info.get('name', '')
+        handlers = {
+            '微博热搜': self._hot_weibo,
+            '百度热搜': self._hot_baidu,
+            '今日头条热榜': self._hot_toutiao,
+            'B站热门': self._hot_bilibili,
+            '抖音热榜': self._hot_douyin,
+        }
+        handler = handlers.get(name)
+        if not handler:
+            print(f'No hotlist handler for {name}, skipping')
+            return
+        try:
+            handler()
+        except Exception as e:
+            print(f'Hotlist fetch error for {name}: {e}')
+
+    def _hot_append(self, source, title, url='', hot=0, desc='',
+                    comments=0, forwards=0, favorites=0):
+        title = (title or '').strip()
+        if not title:
+            return
+        self.news_list.append({
+            'id': self.get_hash(title),
+            'title': title,
+            'source': source,
+            'url': url or '',
+            'publish_time': datetime.now().isoformat(),
+            'views': int(hot or 0),
+            'comments': int(comments or 0),
+            'forwards': int(forwards or 0),
+            'favorites': int(favorites or 0),
+            'content': desc or '',
+            'image': '',  # 硬新闻热榜暂不含配图（仅 RSS/Reddit 有图，按需点击加载）
+        })
+
+    def _hot_weibo(self):
+        # 微博热搜：官方侧栏 JSON（word=热搜词, num=热度）
+        url = 'https://weibo.com/ajax/side/hotSearch'
+        headers = {'Referer': 'https://weibo.com/'}
+        try:
+            r = self.session.get(url, headers=headers, timeout=self.timeout)
+            r.raise_for_status()
+            data = r.json()
+            items = (data.get('data') or {}).get('realtime') or []
+            for it in items[:20]:
+                word = it.get('word') or it.get('note') or ''
+                if not word:
+                    continue
+                hot = it.get('num') or 0
+                link = 'https://s.weibo.com/weibo?q=%23' + quote(word) + '%23'
+                self._hot_append('微博热搜', word, link, hot=hot)
+        except Exception as e:
+            print(f'微博热搜 fetch failed: {e}')
+
+    def _hot_baidu(self):
+        # 百度热搜：board API（content[].word=词, hotScore=热度, rawUrl=链接）
+        url = 'https://top.baidu.com/api/board?platform=wise&tab=realtime'
+        headers = {'Referer': 'https://top.baidu.com/'}
+        try:
+            r = self.session.get(url, headers=headers, timeout=self.timeout)
+            r.raise_for_status()
+            data = r.json()
+            cards = (data.get('data') or {}).get('cards') or []
+            contents = []
+            for c in cards:
+                contents.extend(c.get('content') or [])
+            for it in contents[:20]:
+                word = it.get('word') or ''
+                if not word:
+                    continue
+                hot = it.get('hotScore') or 0
+                desc = it.get('desc') or ''
+                raw = it.get('rawUrl') or it.get('url') or ''
+                link = raw if raw.startswith('http') else 'https://www.baidu.com/s?wd=' + quote(word)
+                self._hot_append('百度热搜', word, link, hot=hot, desc=desc)
+        except Exception as e:
+            print(f'百度热搜 fetch failed: {e}')
+
+    def _hot_toutiao(self):
+        # 今日头条热榜：hot-board JSON（Title=标题, HotValue=热度, Url=链接）
+        url = 'https://www.toutiao.com/hot-event/hot-board/?origin=toutiao_pc'
+        headers = {'Referer': 'https://www.toutiao.com/'}
+        try:
+            r = self.session.get(url, headers=headers, timeout=self.timeout)
+            r.raise_for_status()
+            data = r.json()
+            items = data.get('data') or []
+            for it in items[:20]:
+                title = it.get('Title') or it.get('title') or ''
+                if not title:
+                    continue
+                hot = it.get('HotValue') or 0
+                link = it.get('Url') or ''
+                if link and not link.startswith('http'):
+                    link = 'https://www.toutiao.com' + link
+                self._hot_append('今日头条热榜', title, link, hot=hot)
+        except Exception as e:
+            print(f'今日头条 fetch failed: {e}')
+
+    def _hot_bilibili(self):
+        # B站热门：popular 接口（list[].title, stat.view/reply/share/favorite）
+        url = 'https://api.bilibili.com/x/web-interface/popular?ps=30&pn=1'
+        headers = {'Referer': 'https://www.bilibili.com/'}
+        try:
+            r = self.session.get(url, headers=headers, timeout=self.timeout)
+            r.raise_for_status()
+            data = r.json()
+            items = (data.get('data') or {}).get('list') or []
+            for it in items[:20]:
+                title = it.get('title') or ''
+                if not title:
+                    continue
+                bvid = it.get('bvid') or ''
+                link = 'https://www.bilibili.com/video/' + bvid if bvid else ''
+                stat = it.get('stat') or {}
+                self._hot_append('B站热门', title, link,
+                                 hot=stat.get('view', 0),
+                                 comments=stat.get('reply', 0),
+                                 forwards=stat.get('share', 0),
+                                 favorites=stat.get('favorite', 0))
+        except Exception as e:
+            print(f'B站热门 fetch failed: {e}')
+
+    def _hot_douyin(self):
+        # 抖音热榜：iesdouyin billboard 接口（word_list[].word, hot_value）
+        url = 'https://www.iesdouyin.com/web/api/v2/hotsearch/billboard/word/'
+        headers = {'Referer': 'https://www.douyin.com/'}
+        try:
+            r = self.session.get(url, headers=headers, timeout=self.timeout)
+            r.raise_for_status()
+            data = r.json()
+            items = data.get('word_list') or []
+            for it in items[:20]:
+                word = it.get('word') or ''
+                if not word:
+                    continue
+                hot = it.get('hot_value') or 0
+                link = 'https://www.douyin.com/search/' + quote(word)
+                self._hot_append('抖音热榜', word, link, hot=hot)
+        except Exception as e:
+            print(f'抖音热榜 fetch failed: {e}')
+
     def fetch_all_sources(self):
         print('Fetching from RSS sources...')
         for source_name, rss_url in self.rss_sources.items():
@@ -1989,10 +2137,10 @@ class NewsFetcher:
             self.fetch_rss_feed(source_name, rss_url)
             time.sleep(random.uniform(0.5, 1.5))
         
-        print('Fetching from web sources...')
+        print('Fetching from web sources (hotlist)...')
         for source_info in self.web_sources:
             print(f'  Fetching {source_info["name"]}...')
-            self.fetch_web_page(source_info)
+            self.fetch_hotlist(source_info)
             time.sleep(random.uniform(0.3, 1.0))
         
         print('Fetching Hacker News...')
