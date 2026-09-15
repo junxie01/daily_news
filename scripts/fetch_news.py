@@ -12,6 +12,9 @@ import random
 import re
 from urllib.parse import urljoin, urlparse, quote
 
+MAX_ITEMS_PER_SOURCE = 5
+
+
 class NewsFetcher:
     def __init__(self):
         self.data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
@@ -46,6 +49,17 @@ class NewsFetcher:
             {'name': '今日头条热榜', 'url': 'https://www.toutiao.com/', 'selector': '.title'},
             {'name': 'B站热门', 'url': 'https://www.bilibili.com/v/popular/rank/all', 'selector': '.info .title'},
             {'name': '抖音热榜', 'url': 'https://www.douyin.com/hot', 'selector': '.title'},
+            {'name': '钛媒体', 'url': 'https://www.tmtpost.com/hot'},
+            {'name': '36氪', 'url': 'https://gateway.36kr.com/api/mis/x/rank/list'},
+            {'name': '虎嗅', 'url': 'https://www.huxiu.com/article/'},
+            {'name': 'Phys.org', 'url': 'https://phys.org/sort/rank/1d/'},
+            {'name': 'WIRED', 'url': 'https://www.wired.com/'},
+            {'name': 'The Verge', 'url': 'https://www.theverge.com/'},
+            {'name': 'NPR', 'url': 'https://www.npr.org/'},
+            {'name': 'Security Affairs', 'url': 'https://securityaffairs.com/'},
+            {'name': 'FreeBuf', 'url': 'https://www.freebuf.com/'},
+            {'name': 'Scientific American', 'url': 'https://www.scientificamerican.com/'},
+            {'name': 'The Guardian', 'url': 'https://www.theguardian.com/most-read'},
         ]
     
     def get_with_retry(self, url, timeout=None):
@@ -91,7 +105,7 @@ class NewsFetcher:
             response.encoding = 'utf-8'
             soup = BeautifulSoup(response.text, 'lxml')
             
-            items = soup.find_all('item')[:20]
+            items = soup.find_all('item')[:MAX_ITEMS_PER_SOURCE]
             for item in items:
                 try:
                     title = item.find('title')
@@ -1811,7 +1825,7 @@ class NewsFetcher:
                     self.news_list.append(news)
                     news_count += 1
                     
-                    if news_count >= 10:
+                    if news_count >= MAX_ITEMS_PER_SOURCE:
                         break
                 except Exception as e:
                     continue
@@ -1827,6 +1841,7 @@ class NewsFetcher:
                 return
             
             story_ids = response.json()[:30]
+            added = 0
             
             for story_id in story_ids:
                 try:
@@ -1860,6 +1875,9 @@ class NewsFetcher:
                             'content': story.get('text', '')
                         }
                         self.news_list.append(news)
+                        added += 1
+                        if added >= MAX_ITEMS_PER_SOURCE:
+                            break
                 except Exception as e:
                     continue
                 time.sleep(0.1)
@@ -1874,13 +1892,14 @@ class NewsFetcher:
             'NotTheOnion', 'AnimalsBeingJerks', 'ArtisanVideos',
             'CrazyIdeas', 'lifehacks', 'ExplainLikeImFive', 'woahdude',
         ]
+        candidates = []
         for sub in subreddits:
             try:
-                url = f'https://www.reddit.com/r/{sub}/top.json?sort=top&t=day&limit=20'
+                url = f'https://www.reddit.com/r/{sub}/top.json?sort=top&t=day&limit={MAX_ITEMS_PER_SOURCE}'
                 response = self.get_with_retry(url, timeout=10)
                 if not response:
                     # GitHub Actions 等云 IP 常被 Reddit 墙，退回 old.reddit 再试一次
-                    alt = f'https://old.reddit.com/r/{sub}/top.json?sort=top&t=day&limit=20'
+                    alt = f'https://old.reddit.com/r/{sub}/top.json?sort=top&t=day&limit={MAX_ITEMS_PER_SOURCE}'
                     response = self.get_with_retry(alt, timeout=10)
                 if not response:
                     continue
@@ -1908,11 +1927,16 @@ class NewsFetcher:
                                       else (post_data.get('preview', {}).get('images', [{}])[0].get('source', {}).get('url', '') if post_data.get('preview', {}).get('images') else '')),
                             'content': post_data.get('selftext', '')
                         }
-                        self.news_list.append(news)
+                        candidates.append(news)
                     except Exception:
                         continue
             except Exception as e:
                 print(f'Reddit r/{sub} fetch error: {e}')
+        candidates.sort(
+            key=lambda item: (item.get('favorites', 0), item.get('comments', 0)),
+            reverse=True,
+        )
+        self.news_list.extend(candidates[:MAX_ITEMS_PER_SOURCE])
 
     def fetch_zhihu(self):
         try:
@@ -1928,6 +1952,7 @@ class NewsFetcher:
                 return
 
             data = response.json()
+            added = 0
             for item in data.get('data', []):
                 try:
                     target = item.get('target', {})
@@ -1977,6 +2002,9 @@ class NewsFetcher:
                         'content': target.get('excerpt', '')
                     }
                     self.news_list.append(news)
+                    added += 1
+                    if added >= MAX_ITEMS_PER_SOURCE:
+                        break
                 except Exception:
                     continue
         except Exception as e:
@@ -1994,6 +2022,17 @@ class NewsFetcher:
             '今日头条热榜': self._hot_toutiao,
             'B站热门': self._hot_bilibili,
             '抖音热榜': self._hot_douyin,
+            '钛媒体': self._hot_tmtpost,
+            '36氪': self._hot_36kr,
+            '虎嗅': self._hot_huxiu,
+            'Phys.org': self._hot_phys_org,
+            'WIRED': self._hot_wired,
+            'The Verge': self._hot_the_verge,
+            'NPR': self._hot_npr,
+            'Security Affairs': self._hot_security_affairs,
+            'FreeBuf': self._hot_freebuf,
+            'Scientific American': self._hot_scientific_american,
+            'The Guardian': self._hot_the_guardian,
         }
         handler = handlers.get(name)
         if not handler:
@@ -2003,6 +2042,545 @@ class NewsFetcher:
             handler()
         except Exception as e:
             print(f'Hotlist fetch error for {name}: {e}')
+
+    def _parse_metric(self, value):
+        """把站点公开的 1.2万 / 12.5k 等数量转换为整数。"""
+        if value is None:
+            return 0
+        text = str(value).strip().lower().replace(',', '')
+        match = re.search(r'(\d+(?:\.\d+)?)\s*([万亿km]?)', text)
+        if not match:
+            return 0
+        number = float(match.group(1))
+        multiplier = {
+            '万': 10_000,
+            '亿': 100_000_000,
+            'k': 1_000,
+            'm': 1_000_000,
+        }.get(match.group(2), 1)
+        return int(number * multiplier)
+
+    def _build_hot_news(self, source, title, url='', hot=0, desc='',
+                        comments=0, forwards=0, favorites=0,
+                        publish_time=None, image=''):
+        title = self.clean_title(str(title or '').strip())
+        if not title or not url:
+            return None
+        return {
+            'id': self.get_hash(title),
+            'title': title,
+            'source': source,
+            'url': url,
+            'publish_time': publish_time or datetime.now().isoformat(),
+            'views': self._parse_metric(hot),
+            'comments': self._parse_metric(comments),
+            'forwards': self._parse_metric(forwards),
+            'favorites': self._parse_metric(favorites),
+            'content': str(desc or '').strip(),
+            'image': image or '',
+        }
+
+    def _append_hot_items(self, items):
+        """校验、去重后一次性加入，确保单一网站最多五条。"""
+        accepted = []
+        seen = set()
+        for item in items:
+            if not item or not item.get('title') or not item.get('url'):
+                continue
+            key = (item['title'], item['url'])
+            if key in seen:
+                continue
+            seen.add(key)
+            accepted.append(item)
+            if len(accepted) >= MAX_ITEMS_PER_SOURCE:
+                break
+        self.news_list.extend(accepted)
+        return len(accepted)
+
+    def _looks_blocked(self, html):
+        raw = str(html or '')
+        text = raw[:20000].lower()
+        hard_markers = (
+            'checking your browser', 'checking your connection', 'just a moment',
+            'cf-chl-', 'cloudflare ray id', 'security policy violation',
+            '访问过于频繁',
+        )
+        if any(marker in text for marker in hard_markers):
+            return True
+        return len(raw) < 100000 and ('captcha' in text or '验证码' in text)
+
+    def _candidate_links(self, container, base_url):
+        """从一个榜单容器里提取标题链接，排除导航和短标签。"""
+        base_host = urlparse(base_url).netloc.lower().removeprefix('www.')
+        selectors = (
+            'h1 a[href], h2 a[href], h3 a[href], h4 a[href], '
+            'h5 a[href], h6 a[href], article a[href], li a[href]'
+        )
+        items = []
+        seen = set()
+        for link in container.select(selectors):
+            href = (link.get('href') or '').strip()
+            title = ' '.join((
+                link.get('title') or link.get('aria-label') or link.get_text(' ', strip=True)
+            ).split())
+            if len(title) < 8 or href.startswith(('#', 'javascript:', 'mailto:')):
+                continue
+            url = urljoin(base_url, href)
+            parsed = urlparse(url)
+            host = parsed.netloc.lower().removeprefix('www.')
+            if host != base_host or parsed.path in ('', '/'):
+                continue
+            key = (title, url)
+            if key in seen:
+                continue
+            seen.add(key)
+            items.append((title, url, link))
+        return items
+
+    def _ranked_container(self, soup, headings, base_url):
+        pattern = re.compile('|'.join(re.escape(value) for value in headings), re.I)
+        heading = None
+        for node in soup.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
+            if pattern.search(node.get_text(' ', strip=True)):
+                heading = node
+                break
+        if not heading:
+            return None
+
+        best = None
+        best_count = 0
+        for ancestor in heading.parents:
+            if ancestor.name in ('body', 'html'):
+                break
+            count = len(self._candidate_links(ancestor, base_url))
+            if count > best_count:
+                best = ancestor
+                best_count = count
+            if count >= MAX_ITEMS_PER_SOURCE:
+                return ancestor
+        return best
+
+    def _parse_ranked_section(self, html, source, base_url, headings):
+        if self._looks_blocked(html):
+            return []
+        soup = BeautifulSoup(html or '', 'lxml')
+        container = self._ranked_container(soup, headings, base_url)
+        if not container:
+            return []
+        items = []
+        for title, url, link in self._candidate_links(container, base_url):
+            card = link.find_parent('article') or link.find_parent('li') or link.parent
+            desc_node = card.select_one('p') if card else None
+            item = self._build_hot_news(
+                source, title, url,
+                desc=desc_node.get_text(' ', strip=True) if desc_node else '',
+            )
+            if item:
+                items.append(item)
+            if len(items) >= MAX_ITEMS_PER_SOURCE:
+                break
+        return items
+
+    def _metric_near_label(self, text, labels):
+        label_pattern = '|'.join(re.escape(label) for label in labels)
+        patterns = (
+            rf'(\d[\d,.]*(?:\.\d+)?\s*[万亿km]?)\s*(?:{label_pattern})',
+            rf'(?:{label_pattern})\s*(\d[\d,.]*(?:\.\d+)?\s*[万亿km]?)',
+        )
+        for pattern in patterns:
+            match = re.search(pattern, text or '', re.I)
+            if match:
+                return self._parse_metric(match.group(1))
+        return 0
+
+    def _parse_interaction_cards(self, html, source, base_url, path_pattern):
+        """对无公开全站榜单的网站，只按文章卡片公开互动数排序。"""
+        if self._looks_blocked(html):
+            return []
+        soup = BeautifulSoup(html or '', 'lxml')
+        candidates = []
+        seen = set()
+        links = soup.select(f'a[href*="{path_pattern}"]')
+        for link in links:
+            href = (link.get('href') or '').strip()
+            title = ' '.join((link.get('title') or link.get_text(' ', strip=True)).split())
+            if len(title) < 8:
+                heading = link.find(['h2', 'h3', 'h4'])
+                title = heading.get_text(' ', strip=True) if heading else title
+            url = urljoin(base_url, href)
+            if len(title) < 8 or not url or url in seen:
+                continue
+
+            card = link.find_parent(['article', 'li'])
+            if not card:
+                card = link.parent
+                for _ in range(4):
+                    if not card:
+                        break
+                    card_text = card.get_text(' ', strip=True)
+                    if re.search(r'阅读|浏览|围观|收藏|喜欢|点赞|评论', card_text):
+                        break
+                    card = card.parent
+            text = card.get_text(' ', strip=True) if card else ''
+            views = self._metric_near_label(text, ('阅读', '浏览', '围观'))
+            comments = self._metric_near_label(text, ('评论',))
+            favorites = self._metric_near_label(text, ('收藏',))
+            likes = self._metric_near_label(text, ('喜欢', '点赞'))
+            score = views + comments + favorites + likes
+            if score <= 0:
+                continue
+            seen.add(url)
+            item = self._build_hot_news(
+                source, title, url, hot=views, comments=comments,
+                favorites=favorites + likes,
+            )
+            if item:
+                candidates.append((score, item))
+        candidates.sort(key=lambda pair: pair[0], reverse=True)
+        return [item for _, item in candidates[:MAX_ITEMS_PER_SOURCE]]
+
+    def _parse_tmtpost(self, html):
+        soup = BeautifulSoup(html or '', 'lxml')
+        items = []
+        for card in soup.select('.item'):
+            title_node = card.select_one('._tit')
+            link_node = card.select_one('a._left[href], a[href]')
+            if not title_node or not link_node:
+                continue
+            desc_node = card.select_one('.desc, ._desc, .item_desc')
+            views_node = card.select_one('.action_reads')
+            item = self._build_hot_news(
+                '钛媒体', title_node.get_text(' ', strip=True),
+                urljoin('https://www.tmtpost.com/hot', link_node.get('href', '')),
+                hot=views_node.get_text(' ', strip=True) if views_node else 0,
+                desc=desc_node.get_text(' ', strip=True) if desc_node else '',
+            )
+            if item:
+                items.append(item)
+            if len(items) >= MAX_ITEMS_PER_SOURCE:
+                break
+        return items
+
+    def _parse_36kr(self, payload):
+        top_list = ((payload or {}).get('data') or {}).get('topList') or []
+        ranked = sorted(top_list, key=lambda item: self._parse_metric(item.get('rank')) or 10 ** 9)
+        items = []
+        for raw in ranked:
+            item_id = raw.get('itemId')
+            title = raw.get('widgetTitle') or raw.get('title')
+            if not item_id or not title:
+                continue
+            publish_time = None
+            timestamp = raw.get('publishTime')
+            if timestamp:
+                try:
+                    publish_time = datetime.fromtimestamp(float(timestamp) / 1000).isoformat()
+                except (TypeError, ValueError, OSError):
+                    pass
+            item = self._build_hot_news(
+                '36氪', title, f'https://36kr.com/p/{item_id}',
+                hot=raw.get('statHot', 0), desc=raw.get('summary', ''),
+                publish_time=publish_time,
+                image=raw.get('widgetImage', ''),
+            )
+            if item:
+                items.append(item)
+            if len(items) >= MAX_ITEMS_PER_SOURCE:
+                break
+        return items
+
+    def _parse_huxiu(self, html):
+        return self._parse_interaction_cards(
+            html, '虎嗅', 'https://www.huxiu.com/article/', '/article/'
+        )
+
+    def _parse_huxiu_payload(self, payload):
+        data = (payload or {}).get('data') or {}
+        rows = data.get('dataList') or data.get('datalist') or []
+        candidates = []
+        for raw in rows:
+            counts = raw.get('count_info') or {}
+            views = self._parse_metric(counts.get('viewnum'))
+            comments = self._parse_metric(
+                counts.get('total_comment_num') or counts.get('commentnum')
+            )
+            forwards = self._parse_metric(counts.get('sharetimes'))
+            favorites = (
+                self._parse_metric(counts.get('favtimes')) +
+                self._parse_metric(counts.get('agree'))
+            )
+            score = views + comments + forwards + favorites
+            if score <= 0:
+                continue
+            aid = raw.get('aid')
+            publish_time = None
+            if raw.get('dateline'):
+                try:
+                    publish_time = datetime.fromtimestamp(float(raw['dateline'])).isoformat()
+                except (TypeError, ValueError, OSError):
+                    pass
+            item = self._build_hot_news(
+                '虎嗅', raw.get('title'),
+                f'https://www.huxiu.com/article/{aid}.html' if aid is not None else '',
+                hot=views, comments=comments, forwards=forwards,
+                favorites=favorites, desc=raw.get('summary') or '',
+                publish_time=publish_time, image=raw.get('pic_path') or '',
+            )
+            if item:
+                candidates.append((score, item))
+        candidates.sort(key=lambda pair: pair[0], reverse=True)
+        return [item for _, item in candidates[:MAX_ITEMS_PER_SOURCE]]
+
+    def _parse_phys_org(self, html):
+        if self._looks_blocked(html):
+            return []
+        soup = BeautifulSoup(html or '', 'lxml')
+        items = []
+        containers = soup.select('.sorted-article, article, .news-card')
+        if not containers:
+            containers = soup.select('h2, h3')
+        for card in containers:
+            link = card.select_one('h2 a[href], h3 a[href], a[href]')
+            if not link:
+                continue
+            title = ' '.join((link.get('title') or link.get_text(' ', strip=True)).split())
+            url = urljoin('https://phys.org/sort/rank/1d/', link.get('href', ''))
+            if len(title) < 8 or not url:
+                continue
+            desc_node = card.select_one('p')
+            item = self._build_hot_news(
+                'Phys.org', title, url,
+                desc=desc_node.get_text(' ', strip=True) if desc_node else '',
+            )
+            if item:
+                items.append(item)
+            if len(items) >= MAX_ITEMS_PER_SOURCE:
+                break
+        return items
+
+    def _parse_wired_article(self, html):
+        return self._parse_ranked_section(
+            html, 'WIRED', 'https://www.wired.com/', ('Most Popular',)
+        )
+
+    def _parse_the_verge(self, html):
+        return self._parse_ranked_section(
+            html, 'The Verge', 'https://www.theverge.com/', ('Most Popular',)
+        )
+
+    def _parse_npr(self, html):
+        if self._looks_blocked(html):
+            return []
+        parser = 'xml' if '<rss' in str(html or '')[:500].lower() else 'lxml'
+        soup = BeautifulSoup(html or '', parser)
+        rss_items = soup.find_all('item')
+        if rss_items:
+            items = []
+            for raw in rss_items[:MAX_ITEMS_PER_SOURCE]:
+                title_node = raw.find('title')
+                link_node = raw.find('link')
+                title = title_node.get_text(' ', strip=True) if title_node else ''
+                url = link_node.get_text(' ', strip=True) if link_node else ''
+                desc_node = raw.find('description')
+                item = self._build_hot_news(
+                    'NPR', title, url,
+                    desc=desc_node.get_text(' ', strip=True) if desc_node else '',
+                )
+                if item:
+                    items.append(item)
+            return items
+        return self._parse_ranked_section(
+            html, 'NPR', 'https://www.npr.org/', ('Top Stories',)
+        )
+
+    def _parse_security_affairs(self, html):
+        return self._parse_ranked_section(
+            html, 'Security Affairs', 'https://securityaffairs.com/', ('Most Popular',)
+        )
+
+    def _parse_freebuf(self, html):
+        return self._parse_interaction_cards(
+            html, 'FreeBuf', 'https://www.freebuf.com/', '/articles/'
+        )
+
+    def _parse_freebuf_payload(self, payload):
+        rows = ((payload or {}).get('data') or {}).get('list') or []
+        items = []
+        for raw in rows:
+            title = raw.get('post_title') or raw.get('title')
+            url = urljoin('https://www.freebuf.com/', raw.get('url') or '')
+            publish_time = str(raw.get('post_date') or '').replace(' ', 'T') or None
+            item = self._build_hot_news(
+                'FreeBuf', title, url,
+                hot=raw.get('read_count') or raw.get('pv') or 0,
+                comments=raw.get('comment_num') or raw.get('comment_count') or 0,
+                favorites=(self._parse_metric(raw.get('favorite')) +
+                           self._parse_metric(raw.get('like'))),
+                desc=raw.get('content') or '', publish_time=publish_time,
+                image=raw.get('post_image') or raw.get('column_post_picture') or '',
+            )
+            if item:
+                items.append(item)
+            if len(items) >= MAX_ITEMS_PER_SOURCE:
+                break
+        return items
+
+    def _parse_scientific_american(self, html):
+        if self._looks_blocked(html):
+            return []
+        soup = BeautifulSoup(html or '', 'lxml')
+        items = []
+        seen = set()
+        labels = soup.find_all(string=lambda value: value and value.strip().lower() == 'popular')
+        for label in labels:
+            card = label.find_parent('article') or label.find_parent('li') or label.parent
+            link = card.select_one('h2 a[href], h3 a[href], h4 a[href]') if card else None
+            if not link:
+                link = label.find_next('a', href=True)
+            if not link:
+                continue
+            title = ' '.join((link.get('title') or link.get_text(' ', strip=True)).split())
+            url = urljoin('https://www.scientificamerican.com/', link.get('href', ''))
+            if len(title) < 8 or url in seen:
+                continue
+            seen.add(url)
+            item = self._build_hot_news('Scientific American', title, url)
+            if item:
+                items.append(item)
+            if len(items) >= MAX_ITEMS_PER_SOURCE:
+                break
+        if items:
+            return items
+        return self._parse_ranked_section(
+            html, 'Scientific American', 'https://www.scientificamerican.com/',
+            ('Most Popular',),
+        )
+
+    def _parse_the_guardian(self, html):
+        return self._parse_ranked_section(
+            html, 'The Guardian', 'https://www.theguardian.com/most-read',
+            ('Most read across The Guardian', 'Most read'),
+        )
+
+    def _hot_tmtpost(self):
+        response = self.get_with_retry('https://www.tmtpost.com/hot')
+        if not response:
+            return
+        self._append_hot_items(self._parse_tmtpost(response.text))
+
+    def _hot_36kr(self):
+        payload = {
+            'partner_id': 'web',
+            'timestamp': int(time.time() * 1000),
+            'param': {'siteId': 1, 'platformId': 2},
+        }
+        response = self.session.post(
+            'https://gateway.36kr.com/api/mis/x/rank/list',
+            json=payload, timeout=self.timeout,
+        )
+        response.raise_for_status()
+        self._append_hot_items(self._parse_36kr(response.json()))
+
+    def _hot_huxiu(self):
+        try:
+            response = self.session.post(
+                'https://api-article.huxiu.com/web/article/articleList',
+                data={
+                    'platform': 'www', 'recommend_time': int(time.time()),
+                    'pagesize': 22,
+                },
+                headers={
+                    'Origin': 'https://www.huxiu.com',
+                    'Referer': 'https://www.huxiu.com/article/',
+                },
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+            items = self._parse_huxiu_payload(response.json())
+            if items:
+                self._append_hot_items(items)
+                return
+        except Exception as e:
+            print(f'虎嗅 article API failed: {e}')
+        response = self.get_with_retry('https://www.huxiu.com/article/')
+        if response:
+            self._append_hot_items(self._parse_huxiu(response.text))
+
+    def _hot_phys_org(self):
+        response = self.get_with_retry('https://phys.org/sort/rank/1d/')
+        if response:
+            self._append_hot_items(self._parse_phys_org(response.text))
+
+    def _hot_wired(self):
+        homepage = self.get_with_retry('https://www.wired.com/')
+        if not homepage:
+            return
+        items = self._parse_wired_article(homepage.text)
+        if items:
+            self._append_hot_items(items)
+            return
+        soup = BeautifulSoup(homepage.text or '', 'lxml')
+        for link in soup.select('a[href*="/story/"], a[href*="/article/"]')[:3]:
+            href = link.get('href', '')
+            if not href:
+                continue
+            article = self.get_with_retry(urljoin('https://www.wired.com/', href))
+            if article:
+                items = self._parse_wired_article(article.text)
+            if items:
+                self._append_hot_items(items)
+                return
+
+    def _hot_the_verge(self):
+        response = self.get_with_retry('https://www.theverge.com/')
+        if response:
+            self._append_hot_items(self._parse_the_verge(response.text))
+
+    def _hot_npr(self):
+        response = self.get_with_retry('https://www.npr.org/')
+        items = self._parse_npr(response.text) if response else []
+        if not items:
+            feed = self.get_with_retry('https://feeds.npr.org/1001/rss.xml')
+            items = self._parse_npr(feed.text) if feed else []
+        self._append_hot_items(items)
+
+    def _hot_security_affairs(self):
+        response = self.get_with_retry('https://securityaffairs.com/')
+        if response:
+            self._append_hot_items(self._parse_security_affairs(response.text))
+
+    def _hot_freebuf(self):
+        # 官网“热榜 / 7天内”单选项使用该公开接口，type=2 对应热榜。
+        try:
+            response = self.session.get(
+                'https://fapi.freebuf.com/frontend/home/article',
+                params={
+                    'page': 1, 'limit': MAX_ITEMS_PER_SOURCE,
+                    'category': '', 'day': 7, 'type': 2,
+                },
+                headers={'Referer': 'https://www.freebuf.com/'},
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+            items = self._parse_freebuf_payload(response.json())
+            if items:
+                self._append_hot_items(items)
+                return
+        except Exception as e:
+            print(f'FreeBuf hot API failed: {e}')
+        response = self.get_with_retry('https://www.freebuf.com/')
+        if response:
+            self._append_hot_items(self._parse_freebuf(response.text))
+
+    def _hot_scientific_american(self):
+        response = self.get_with_retry('https://www.scientificamerican.com/')
+        if response:
+            self._append_hot_items(self._parse_scientific_american(response.text))
+
+    def _hot_the_guardian(self):
+        response = self.get_with_retry('https://www.theguardian.com/most-read')
+        if response:
+            self._append_hot_items(self._parse_the_guardian(response.text))
 
     def _hot_append(self, source, title, url='', hot=0, desc='',
                     comments=0, forwards=0, favorites=0):
@@ -2015,10 +2593,10 @@ class NewsFetcher:
             'source': source,
             'url': url or '',
             'publish_time': datetime.now().isoformat(),
-            'views': int(hot or 0),
-            'comments': int(comments or 0),
-            'forwards': int(forwards or 0),
-            'favorites': int(favorites or 0),
+            'views': self._parse_metric(hot),
+            'comments': self._parse_metric(comments),
+            'forwards': self._parse_metric(forwards),
+            'favorites': self._parse_metric(favorites),
             'content': desc or '',
             'image': '',  # 硬新闻热榜暂不含配图（仅 RSS/Reddit 有图，按需点击加载）
         })
@@ -2032,7 +2610,7 @@ class NewsFetcher:
             r.raise_for_status()
             data = r.json()
             items = (data.get('data') or {}).get('realtime') or []
-            for it in items[:20]:
+            for it in items[:MAX_ITEMS_PER_SOURCE]:
                 word = it.get('word') or it.get('note') or ''
                 if not word:
                     continue
@@ -2054,7 +2632,7 @@ class NewsFetcher:
             contents = []
             for c in cards:
                 contents.extend(c.get('content') or [])
-            for it in contents[:20]:
+            for it in contents[:MAX_ITEMS_PER_SOURCE]:
                 word = it.get('word') or ''
                 if not word:
                     continue
@@ -2075,7 +2653,7 @@ class NewsFetcher:
             r.raise_for_status()
             data = r.json()
             items = data.get('data') or []
-            for it in items[:20]:
+            for it in items[:MAX_ITEMS_PER_SOURCE]:
                 title = it.get('Title') or it.get('title') or ''
                 if not title:
                     continue
@@ -2096,7 +2674,7 @@ class NewsFetcher:
             r.raise_for_status()
             data = r.json()
             items = (data.get('data') or {}).get('list') or []
-            for it in items[:20]:
+            for it in items[:MAX_ITEMS_PER_SOURCE]:
                 title = it.get('title') or ''
                 if not title:
                     continue
@@ -2120,7 +2698,7 @@ class NewsFetcher:
             r.raise_for_status()
             data = r.json()
             items = data.get('word_list') or []
-            for it in items[:20]:
+            for it in items[:MAX_ITEMS_PER_SOURCE]:
                 word = it.get('word') or ''
                 if not word:
                     continue

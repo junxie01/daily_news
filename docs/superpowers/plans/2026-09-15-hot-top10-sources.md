@@ -1,5 +1,7 @@
 # 四站热度前十抓取与固定热度排序 Implementation Plan
 
+> 已被 `../specs/2026-09-15-expanded-hot-five-sources-design.md` 的最新范围取代：11 个新增来源，整个项目每站最多 5 条。本文件仅保留为原始实施计划记录。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 为钛媒体、36氪、虎嗅和 Phys.org 增加每站最多 10 条的热度新闻抓取，并让首页固定按综合热度排序且不再显示排序按钮。

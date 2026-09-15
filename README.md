@@ -6,14 +6,14 @@
 
 ## 功能特性
 
-1. **双栏资讯**：「趣新闻」（Reddit 趣味 subreddit、Hacker News、Atlas Obscura / Kottke / Mental Floss 等奇趣 RSS）与「硬新闻」（微博 / 百度 / 头条 / B站 / 抖音 / 知乎 中文热榜）分开抓取，网页顶部一键切换
+1. **双栏资讯**：「趣新闻」（Reddit 趣味 subreddit、Hacker News、Atlas Obscura / Kottke / Mental Floss 等奇趣 RSS）与「硬新闻」（中文热榜、科技、安全、科学和综合新闻热门内容）分开抓取，网页顶部一键切换
 2. **智能去重聚合**：自动识别重复资讯，保留最早来源并聚合多平台数据
 3. **四维热度打分**：浏览量 / 评论数 / 转发量 / 收藏数 四个维度各按排名占 25%，合计满分 100（真实指标，不伪造）
 4. **轻量卡片 + 点击看大图 + 历史归档**：列表默认纯文字卡片（不预加载图片，体积小、加载快）；点开条目后才从源站加载配图（仅 RSS 趣闻源与 Reddit 有图，硬新闻不塞图避免 logo 噪音）；每天快照存入 `data/archive/YYYY-MM-DD.json`，网页可翻看往期
-5. **交互式展示**：支持按热度/浏览量/评论数/转发量/收藏数排序，并在「趣新闻 / 硬新闻」之间切换
+5. **固定热度排序**：始终按综合热度降序展示，并可在「趣新闻 / 硬新闻」之间切换
 6. **自动化更新**：GitHub Actions 每天自动抓取新闻并部署网页，无需 AI API 或付费额度
 
-> 源清单以代码为准：`scripts/fetch_news.py` 里的 `rss_sources`、`web_sources`，以及 `fetch_reddit()` 中的 subreddit 列表。想加/换源直接改这几处即可。
+> 每个网站每次最多保留 5 条。源清单以代码为准：`scripts/fetch_news.py` 里的 `rss_sources`、`web_sources`，以及 `fetch_reddit()` 中的 subreddit 列表。
 
 ## 快速开始
 
@@ -99,7 +99,7 @@ daily_news/
 | Hacker News | API | 科技 / 长见识，含真实评论数 |
 | Reddit（14 个趣闻 subreddit） | API | interestingasfuck / nextfuckinglevel / todayilearned / NotTheOnion / oddlysatisfying / DIY / woahdude …，含真实分数 |
 
-**🔴 硬新闻（中文热榜）**
+**🔴 硬新闻（热榜 / 热门内容）**
 
 | 源 | 类型 | 说明 |
 |------|------|------|
@@ -109,8 +109,19 @@ daily_news/
 | B站热门 | 网页 | 全站热门 |
 | 抖音热榜 | 网页 | 实时热榜 |
 | 知乎 | API | 知乎热榜（含真实热度值） |
+| 钛媒体 | 网页 | 热门文章 |
+| 36氪 | API | 48 小时人气阅读榜 |
+| 虎嗅 | API | 近期候选按公开互动数排序 |
+| Phys.org | 网页 | 过去一天排行 |
+| WIRED | 网页 | Most Popular |
+| The Verge | 网页 | Most Popular |
+| NPR | 网页 / RSS | 官方 Top Stories 编辑排序 |
+| Security Affairs | 网页 | Most Popular |
+| FreeBuf | API | 7 天热榜 |
+| Scientific American | 网页 | Popular 标记文章 |
+| The Guardian | 网页 | Most read across the Guardian |
 
-> 注：Reddit 在 GitHub Actions 等云厂商 IP 上常被限流（返回空），本地运行正常；届时由 HN + 趣闻 RSS 兜底。
+> 注：Reddit、Phys.org 等来源可能限制云厂商 IP。抓取器会跳过当次失败的单站，继续更新其他来源，不会因一个站点失败而终止。
 
 ## 自定义
 
@@ -122,7 +133,7 @@ daily_news/
 - 加 RSS 趣闻源：往 `rss_sources` 字典追加 `'名称': 'RSS_URL'`；
 - 加 Reddit 趣闻版块：往 `fetch_reddit()` 里的 `subreddits` 列表追加 subreddit 名；
 - 加 HN 类社区：扩展 `fetch_hackernews()`；
-- 加硬新闻网页源：往 `web_sources` 列表追加 `{'name': '名称', 'url': '...', 'selector': '.标题选择器'}`。
+- 加硬新闻源：往 `web_sources` 列表追加配置，并在 `fetch_hotlist()` 注册对应处理函数。
 ```
 
 ## 许可证

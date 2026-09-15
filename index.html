@@ -51,14 +51,6 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
-        .sort-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 15px;
-            justify-content: center;
-        }
-
         .view-buttons {
             display: flex;
             gap: 10px;
@@ -266,7 +258,7 @@
                 font-size: 1.8em;
             }
             
-            .sort-buttons, .view-buttons {
+            .view-buttons {
                 justify-content: center;
             }
             
@@ -286,14 +278,6 @@
         </header>
 
         <div class="controls">
-            <div class="sort-buttons">
-                <button class="active" data-sort="hotness">热度</button>
-                <button data-sort="views">浏览量</button>
-                <button data-sort="comments">评论数</button>
-                <button data-sort="forwards">转发量</button>
-                <button data-sort="favorites">收藏数</button>
-
-            </div>
             <div class="view-buttons">
                 <button class="active" data-cat="趣新闻">趣新闻</button>
                 <button data-cat="硬新闻">硬新闻</button>
@@ -314,7 +298,6 @@
 
     <script>
         let newsData = [];
-        let currentSort = 'hotness';
         let currentCat = '趣新闻';
 
         async function loadNewsData() {
@@ -369,9 +352,9 @@
         function renderNews() {
             // 按「趣新闻 / 硬新闻」分类筛选
             const catNews = newsData.filter(n => (n.category || '趣新闻') === currentCat);
-            // 稳健排序：当前维度降序（缺字段按 0），同分按发布时间新→旧
+            // 固定按综合热度降序（缺字段按 0），同分按发布时间新→旧
             const sorted = catNews.slice().sort((a, b) => {
-                const d = (Number(b[currentSort]) || 0) - (Number(a[currentSort]) || 0);
+                const d = (Number(b.hotness) || 0) - (Number(a.hotness) || 0);
                 if (d !== 0) return d;
                 return (Date.parse(b.publish_time) || 0) - (Date.parse(a.publish_time) || 0);
             });
@@ -472,15 +455,6 @@
             }
             return num.toLocaleString();
         }
-
-        document.querySelectorAll('.sort-buttons button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.sort-buttons button').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentSort = btn.dataset.sort;
-                renderNews();
-            });
-        });
 
         document.querySelectorAll('.view-buttons button').forEach(btn => {
             btn.addEventListener('click', () => {
