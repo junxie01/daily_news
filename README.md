@@ -6,7 +6,7 @@
 
 ## 功能特性
 
-1. **双栏资讯**：「趣新闻」（Reddit 趣味 subreddit、Hacker News、Atlas Obscura / Kottke / Mental Floss 等奇趣 RSS）与「硬新闻」（中文热榜、科技、安全、科学和综合新闻热门内容）分开抓取，网页顶部一键切换
+1. **双栏资讯**：「趣新闻」（B站热门、Reddit 趣味 subreddit、Hacker News、Atlas Obscura / Kottke / Mental Floss 等奇趣 RSS）与「硬新闻」（中文热榜、科技、安全、科学和综合新闻热门内容）分栏展示，网页顶部一键切换
 2. **智能去重聚合**：自动识别重复资讯，保留最早来源并聚合多平台数据
 3. **四维热度打分**：浏览量 / 评论数 / 转发量 / 收藏数 四个维度各按排名占 25%，合计满分 100（真实指标，不伪造）
 4. **轻量卡片 + 点击看大图 + 历史归档**：列表默认纯文字卡片（不预加载图片，体积小、加载快）；点开条目后才从源站加载配图（仅 RSS 趣闻源与 Reddit 有图，硬新闻不塞图避免 logo 噪音）；每天快照存入 `data/archive/YYYY-MM-DD.json`，网页可翻看往期
@@ -98,6 +98,7 @@ daily_news/
 | xkcd | RSS | 极客漫画 |
 | Hacker News | API | 科技 / 长见识，含真实评论数 |
 | Reddit（14 个趣闻 subreddit） | API | interestingasfuck / nextfuckinglevel / todayilearned / NotTheOnion / oddlysatisfying / DIY / woahdude …，含真实分数 |
+| B站热门 | API | 全站热门视频 |
 
 **🔴 硬新闻（热榜 / 热门内容）**
 
@@ -106,7 +107,6 @@ daily_news/
 | 微博热搜 | 网页 | 实时热搜 |
 | 百度热搜 | 网页 | 实时热榜 |
 | 今日头条热榜 | 网页 | 头条热榜 |
-| B站热门 | 网页 | 全站热门 |
 | 抖音热榜 | 网页 | 实时热榜 |
 | 知乎 | API | 知乎热榜（含真实热度值） |
 | 钛媒体 | 网页 | 热门文章 |

@@ -350,8 +350,11 @@
         });
 
         function renderNews() {
-            // 按「趣新闻 / 硬新闻」分类筛选
-            const catNews = newsData.filter(n => (n.category || '趣新闻') === currentCat);
+            // 旧快照中的 B 站条目也按新分类显示。
+            const catNews = newsData.filter(news => {
+                const category = news.source === 'B站热门' ? '趣新闻' : (news.category || '趣新闻');
+                return category === currentCat;
+            });
             // 固定按综合热度降序（缺字段按 0），同分按发布时间新→旧
             const sorted = catNews.slice().sort((a, b) => {
                 const d = (Number(b.hotness) || 0) - (Number(a.hotness) || 0);

@@ -41,8 +41,7 @@ class NewsFetcher:
             'xkcd': 'https://xkcd.com/rss.xml',                             # 极客冷幽默
         }
         
-        # 硬新闻向中文热榜（selector 为最佳猜测，若某源抓不到请按站点结构微调）
-        # 这些归类为「硬新闻」，与趣闻 RSS / Hacker News / Reddit 分开，靠网页「硬新闻 / 趣新闻」切换查看
+        # 网站热榜来源；B站热门归「趣新闻」，其他热榜归「硬新闻」。
         self.web_sources = [
             {'name': '微博热搜', 'url': 'https://s.weibo.com/top/summary?cate=realtimehot', 'selector': 'td.td-02 a'},
             {'name': '百度热搜', 'url': 'https://top.baidu.com/board?tab=realtime', 'selector': '.c-single-text-ellipsis, .content_1YyZf'},
@@ -2770,9 +2769,9 @@ class NewsFetcher:
                 news['hotness'] += score
         for news in news_list:
             news['hotness'] = round(news['hotness'], 2)
-            # 分类：趣闻源（RSS 趣闻 + Hacker News + Reddit）归「趣新闻」，其余（中文硬新闻热榜）归「硬新闻」
+            # RSS 趣闻、Hacker News、Reddit 和 B站热门归「趣新闻」。
             src = news.get('source', '') or ''
-            if src in self.rss_sources or 'Reddit' in src or 'Hacker News' in src:
+            if src == 'B站热门' or src in self.rss_sources or 'Reddit' in src or 'Hacker News' in src:
                 news['category'] = '趣新闻'
             else:
                 news['category'] = '硬新闻'
